@@ -1,5 +1,7 @@
 package edu.um.apollo;
 
+import edu.um.core.Person;
+import edu.um.core.protocol.packets.PacketFactory;
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.Grizzly;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
@@ -63,7 +65,7 @@ public class Apollo {
                     break;
                 }
 
-                connection.write(userInput);
+                connection.write(PacketFactory.createGreetServerPacket(Person.builder().id("5312313").firstName("Bob").lastName("Flower Tes2t").publicKey("publicKey").privateKey("privatekey").build()).build());
             } while (true);
         } finally {
             // close the client connection

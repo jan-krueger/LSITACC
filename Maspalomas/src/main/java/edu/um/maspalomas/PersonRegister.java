@@ -6,24 +6,24 @@ import java.util.*;
 
 public class PersonRegister {
 
-    private final Map<String, Person> persons_by_id = new HashMap<>();
-    private final Map<String, List<Person>> persons_by_name = new HashMap<>();
+    private static final Map<String, Person> persons_by_id = new HashMap<>();
+    private static final Map<String, List<Person>> persons_by_name = new HashMap<>();
 
-    public PersonRegister() {}
+    private PersonRegister() {}
 
-    public boolean add(Person person) {
+    public static boolean add(Person person) {
 
         //--- note: the id has to be unique
-        if(this.persons_by_id.containsKey(person.getId())) {
+        if(persons_by_id.containsKey(person.getId())) {
             return false;
         }
-        this.persons_by_id.put(person.getId(), person);
+        persons_by_id.put(person.getId(), person);
 
         //--- the name does not need to be unique, so we need to store a list for people with the same name
-        if(this.persons_by_name.containsKey(person.getFullNameIdentifier())) {
-            this.persons_by_name.get(person.getFullNameIdentifier()).add(person);
+        if(persons_by_name.containsKey(person.getFullNameIdentifier())) {
+            persons_by_name.get(person.getFullNameIdentifier()).add(person);
         } else {
-            this.persons_by_name.put(person.getFullNameIdentifier(), new ArrayList<>() {{
+            persons_by_name.put(person.getFullNameIdentifier(), new ArrayList<>() {{
                 this.add(person);
             }});
         }
@@ -31,12 +31,12 @@ public class PersonRegister {
         return true;
     }
 
-    public Optional<Person> byId(String id) {
-        return Optional.of(this.persons_by_id.get(id));
+    public static Optional<Person> byId(String id) {
+        return Optional.ofNullable(persons_by_id.get(id));
     }
 
-    public Optional<List<Person>> byName(String fullNameId) {
-        return Optional.of(this.persons_by_name.get(fullNameId));
+    public static Optional<List<Person>> byName(String fullNameId) {
+        return Optional.ofNullable(persons_by_name.get(fullNameId));
     }
 
 }

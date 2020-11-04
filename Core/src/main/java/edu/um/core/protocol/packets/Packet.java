@@ -12,6 +12,7 @@ public class Packet {
 
     private final int id;
     private final Set<String> requiredData;
+    private Map<String, String> payload = new HashMap<>();
 
     /**
      *
@@ -23,6 +24,10 @@ public class Packet {
         this.requiredData = requiredData;
     }
 
+    public <T extends Packet> T as(Class<T> clazz) {
+        return clazz.cast(this);
+    }
+
     public int getId() {
         return id;
     }
@@ -31,44 +36,42 @@ public class Packet {
         return requiredData;
     }
 
-    public Builder create() {
-        return new Builder(this);
+    public String get(String key) {
+        return this.payload.get(key);
     }
 
-    public static class Builder {
-
-        private final Packet packet;
-        private Map<String, String> payload = new HashMap<>();
-
-        private Builder(Packet packet) {
-            this.packet = packet;
+    public Packet add(String key, String value) {
+        if(this.requiredData.contains(key)) {
+            this.payload.put(key, value);
+        } else {
+            throw new IllegalArgumentException(String.format("'%s' is not a valid option for %s (%d)",
+                    key, this.getClass().getName(), this.id));
         }
-
-        public Builder add(String key, String value) {
-            if(this.packet.getRequiredData().contains(key)) {
-                this.payload.put(key, value);
-            } else {
-                throw new IllegalArgumentException(String.format("'%s' is not a valid option for %s (%d)",
-                        key, packet.getClass().getName(), packet.getId()));
-            }
-            return this;
-        }
-
-        public String build() {
-            JsonObject payload = new JsonObject();
-            payload.addProperty("id", this.packet.id);
-
-            JsonArray dataArray = new JsonArray();
-            this.payload.forEach((key, value) -> {
-                JsonObject entryObject = new JsonObject();
-                entryObject.addProperty("key", key);
-                entryObject.addProperty("value", value);
-                dataArray.add(entryObject);
-            });
-
-            return payload.toString();
-        }
-
+        return this;
     }
 
+    public String build() {
+
+        if(this.requiredData.size() != this.payload.size()) {
+            throw new IllegalStateException("Data set is not complete");
+        }
+
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", this.id);
+        JsonArray dataArray = new JsonArray();
+        this.payload.forEach((key, value) -> {
+            JsonObject entryObject = new JsonObject();
+            entryObject.addProperty("key", key);
+            entryObject.addProperty("value", value);
+            dataArray.add(entryObject);
+        });
+        payload.add("payload", dataArray);
+
+        return payload.toString();
+    }
+
+    @Override
+    public String toString() {
+        return this.build();
+    }
 }

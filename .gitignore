@@ -3,3 +3,7 @@
 Apollo/target
 Core/target
 Maspalomas/target
+*.cert
+*.pri
+*.pub
+!test-certificates
