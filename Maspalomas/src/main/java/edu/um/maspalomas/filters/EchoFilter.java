@@ -1,6 +1,7 @@
 package edu.um.maspalomas.filters;
 
 
+import edu.um.core.protocol.packets.Packets;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;
@@ -17,7 +18,7 @@ public class EchoFilter extends BaseFilter {
 
         final Object message = ctx.getMessage();
 
-        ctx.write(peerAddress, message, null);
+        ctx.write(peerAddress, Packets.NAK.create().build(), null);
 
         return ctx.getStopAction();
     }

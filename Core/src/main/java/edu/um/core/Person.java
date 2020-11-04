@@ -6,13 +6,16 @@ import java.util.List;
 public class Person {
 
     private final String id;
+    private final String fullNameIdentifier;
+
     private final String lastName;
     private final String[] firstNames;
     private final String privateKey;
     private final String publicKey;
 
-    private Person(String id, String lastName, String[] firstNames, String privateKey, String publicKey) {
+    private Person(String id, String fullNameIdentifier, String lastName, String[] firstNames, String privateKey, String publicKey) {
         this.id = id;
+        this.fullNameIdentifier = fullNameIdentifier;
         this.lastName = lastName;
         this.firstNames = firstNames;
         this.privateKey = privateKey;
@@ -21,6 +24,10 @@ public class Person {
 
     public String getId() {
         return id;
+    }
+
+    public String getFullNameIdentifier() {
+        return this.fullNameIdentifier;
     }
 
     public String getLastName() {
@@ -59,12 +66,12 @@ public class Person {
         }
 
         public Builder lastName(String lastName) {
-            this.lastName = lastName;
+            this.lastName = lastName.toUpperCase();
             return this;
         }
 
         public Builder firstName(String firstName) {
-            this.firstNames.add(firstName);
+            this.firstNames.add(firstName.toUpperCase());
             return this;
         }
 
@@ -79,7 +86,10 @@ public class Person {
         }
 
         public Person build() {
-            return new Person(id, lastName, firstNames.toArray(new String[0]), privateKey, publicKey);
+            return new Person(
+                    id, String.format("%s, %s", this.lastName, String.join(", ", firstNames)), lastName,
+                    firstNames.toArray(new String[0]), privateKey, publicKey
+            );
         }
 
 

@@ -2,6 +2,7 @@ package edu.um.maspalomas;
 
 import edu.um.maspalomas.filters.DecryptFilter;
 import edu.um.maspalomas.filters.EchoFilter;
+import org.apache.commons.cli.*;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
 import org.glassfish.grizzly.filterchain.TransportFilter;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
@@ -9,53 +10,62 @@ import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
 import org.glassfish.grizzly.utils.StringFilter;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 public class Maspalomas {
 
-    private static final Logger logger = Logger.getLogger(Maspalomas.class.getName());
+    private static final Logger logger = Logger.getLogger(Maspalomas.class.getSimpleName());
 
     public static final String HOST = "localhost";
-    public static final int PORT = 7777;
 
 
     public static void main(String[] args) throws IOException {
-        // Create a FilterChain using FilterChainBuilder
+
+        CommandLine arguments = parseArguments(args);
+        final int port = Integer.parseUnsignedInt(arguments.getOptionValue("port"));
+
         FilterChainBuilder filterChainBuilder = FilterChainBuilder.stateless();
 
-        // Add TransportFilter, which is responsible
-        // for reading and writing data to the connection
         filterChainBuilder.add(new TransportFilter());
 
-        // StringFilter is responsible for Buffer <-> String conversion
         filterChainBuilder.add(new StringFilter(StandardCharsets.UTF_8));
         filterChainBuilder.add(new DecryptFilter());
 
-        // EchoFilter is responsible for echoing received messages
         filterChainBuilder.add(new EchoFilter());
 
         // Create TCP transport
-        final TCPNIOTransport transport =
-                TCPNIOTransportBuilder.newInstance().build();
+        final TCPNIOTransport transport = TCPNIOTransportBuilder.newInstance().build();
 
         transport.setProcessor(filterChainBuilder.build());
         try {
-            // binding transport to start listen on certain host and port
-            transport.bind(HOST, PORT);
-
-            // start the transport
+            transport.bind(HOST, port);
+            logger.info(String.format("Starting server %s:%d", HOST, port));
             transport.start();
 
             logger.info("Press any key to stop the server...");
             System.in.read();
         } finally {
             logger.info("Stopping transport...");
-            // stop the transport
             transport.shutdownNow();
 
             logger.info("Stopped transport...");
         }
     }
+
+    private static CommandLine parseArguments(String[] args) {
+        Options options = new Options();
+        options.addRequiredOption("p", "port", true, "The port the server will listen to");
+
+        CommandLineParser commandLineParser = new DefaultParser();
+        try {
+            return commandLineParser.parse(options, args);
+        } catch (ParseException e) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp( "maspalomas", options);
+            System.exit(1);
+        }
+        return null;
+    }
+
 }
