@@ -29,7 +29,8 @@ public class ProtocolFilter extends BaseFilter {
                     }
 
                     if(PersonRegister.add(person)) {
-                        ctx.write(ctx.getAddress(), PacketFactory.createAcknowledgePacket().build(), null);
+                        //TODO get actual server public key
+                        ctx.write(ctx.getAddress(), PacketFactory.createGreetClientPacket("server-public-key").build(), null);
                     } else {
                         throw new IllegalStateException();
                     }

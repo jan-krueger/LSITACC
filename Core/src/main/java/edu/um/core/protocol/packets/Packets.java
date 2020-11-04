@@ -10,6 +10,7 @@ public enum Packets {
     ACK(1, AcknowledgePacket.class),
 
     GREET_SERVER(2, GreetServer.class),
+    GREET_CLIENT(3, GreetClient.class),
 
 
     //--- This message is send as a response to a received package from the client to in case the action has not (!) been

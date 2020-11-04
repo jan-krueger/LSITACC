@@ -2,10 +2,12 @@ package edu.um.core.protocol.packets;
 
 import java.util.HashSet;
 
-public class GreetClient extends AuthenticatedPacket {
+public class GreetClient extends Packet {
 
-    protected GreetClient(Packets id, String authToken, HashSet<String> requiredData) {
-        super(id, authToken, requiredData);
+    protected GreetClient() {
+        super(Packets.GREET_CLIENT, new HashSet<>() {{
+            this.add("publicKey");
+        }});
     }
 
 }

@@ -14,8 +14,14 @@ public class PacketFactory {
         return (NotAcknowledgePacket) Packets.NAK.create();
     }
 
+    public static GreetClient createGreetClientPacket(String publicKey) {
+        GreetClient packet =  Packets.GREET_CLIENT.create().as(GreetClient.class);
+        packet.add("publicKey", publicKey);
+        return packet;
+    }
+
     public static GreetServer createGreetServerPacket(Person person) {
-        GreetServer packet =  (GreetServer) Packets.GREET_SERVER.create();
+        GreetServer packet =  Packets.GREET_SERVER.create().as(GreetServer.class);
         packet.add("id", person.getId());
         packet.add("firstNames", String.join(" ", person.getFirstNames()));
         packet.add("lastName", person.getLastName());
