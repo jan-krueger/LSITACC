@@ -1,8 +1,7 @@
 package edu.um.maspalomas.filters;
 
 
-import edu.um.core.Person;
-import edu.um.core.protocol.packets.PacketFactory;
+import edu.um.core.protocol.PacketFactory;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;

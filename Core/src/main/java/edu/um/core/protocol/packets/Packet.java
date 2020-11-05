@@ -2,6 +2,7 @@ package edu.um.core.protocol.packets;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import edu.um.core.protocol.Packets;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,7 +52,10 @@ public class Packet {
     }
 
     public String build() {
+        return buildObject().toString();
+    }
 
+    protected JsonObject buildObject() {
         if(this.requiredData.size() != this.payload.size()) {
             throw new IllegalStateException("Data set is not complete");
         }
@@ -64,10 +68,10 @@ public class Packet {
             entryObject.addProperty("key", key);
             entryObject.addProperty("value", value);
             dataArray.add(entryObject);
+            payload.add("payload", dataArray);
         });
-        payload.add("payload", dataArray);
 
-        return payload.toString();
+        return payload;
     }
 
     @Override

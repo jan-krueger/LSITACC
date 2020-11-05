@@ -1,8 +1,9 @@
-package edu.um.core.protocol.packets;
+package edu.um.core.protocol;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import edu.um.core.protocol.packets.Packet;
 
 import java.util.Optional;
 

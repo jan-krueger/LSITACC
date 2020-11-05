@@ -1,12 +1,16 @@
 package edu.um.maspalomas.filters;
 
 import edu.um.core.Person;
+import edu.um.core.protocol.PacketFactory;
+import edu.um.core.protocol.PacketParser;
+import edu.um.core.protocol.Packets;
 import edu.um.core.protocol.packets.*;
 import edu.um.maspalomas.PersonRegister;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;
 
+import java.util.List;
 import java.util.Optional;
 
 public class ProtocolFilter extends BaseFilter {
@@ -21,7 +25,7 @@ public class ProtocolFilter extends BaseFilter {
 
             switch (Packets.byId(packet.getId()).get()) {
                 case GREET_SERVER:
-                    Person person = packet.as(GreetServer.class).getPerson();
+                    Person person = packet.as(GreetServerPacket.class).getPerson();
 
                     if(PersonRegister.byId(person.getId()).isPresent()) {
                         ctx.write(ctx.getAddress(), PacketFactory.createNotAcknowledgePacket().build(), null);
@@ -36,11 +40,20 @@ public class ProtocolFilter extends BaseFilter {
                     }
                     break;
 
-                case ACK:
+                case SEND_MESSAGE:
+                    SendMessagePacket messagePacket = packet.as(SendMessagePacket.class);
+                    List<Person> receivers = PersonRegister.find(messagePacket.get("receiver"));
+
+                    if(receivers.isEmpty()) {
+                        //TODO return ExecutedActionPacket = false
+                    }
+
+                    for(Person receiver : receivers) {
+                        System.out.printf("message for %s: %s\n", receiver.getId(), messagePacket.get("message"));
+                    }
+
                     break;
 
-                case NAK:
-                    break;
                 default:
                     throw new IllegalStateException("Unexpected value: " + Packets.byId(packet.getId()));
             }

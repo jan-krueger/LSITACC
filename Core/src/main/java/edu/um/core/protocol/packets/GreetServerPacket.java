@@ -1,13 +1,14 @@
 package edu.um.core.protocol.packets;
 
 import edu.um.core.Person;
+import edu.um.core.protocol.Packets;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
-public class GreetServer extends Packet {
+public class GreetServerPacket extends Packet {
 
-    protected GreetServer() {
+    public GreetServerPacket() {
         super(Packets.GREET_SERVER, new HashSet<>() {{
             this.add("id");
             this.add("firstNames");

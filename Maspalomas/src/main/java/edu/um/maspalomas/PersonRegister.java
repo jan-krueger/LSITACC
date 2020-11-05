@@ -39,4 +39,18 @@ public class PersonRegister {
         return Optional.ofNullable(persons_by_name.get(fullNameId));
     }
 
+    public static List<Person> find(String input) {
+        List<Person> persons = new ArrayList<>();
+
+        Optional<Person> optionalPerson = byId(input);
+        if(optionalPerson.isPresent()) {
+            persons.add(optionalPerson.get());
+        } else {
+            Optional<List<Person>> personList = byName(input);
+            personList.ifPresent(persons::addAll);
+        }
+
+        return persons;
+    }
+
 }

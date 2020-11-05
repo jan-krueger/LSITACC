@@ -1,4 +1,6 @@
-package edu.um.core.protocol.packets;
+package edu.um.core.protocol;
+
+import edu.um.core.protocol.packets.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
@@ -9,8 +11,12 @@ public enum Packets {
     // has been successfully executed.
     ACK(1, AcknowledgePacket.class),
 
-    GREET_SERVER(2, GreetServer.class),
-    GREET_CLIENT(3, GreetClient.class),
+    GREET_SERVER(2, GreetServerPacket.class),
+    GREET_CLIENT(3, GreetClientPacket.class),
+
+    SEND_MESSAGE(4, SendMessagePacket.class),
+
+    EXECUTED_ACTION(5, ExecutedActionPacket.class),
 
 
     //--- This message is send as a response to a received package from the client to in case the action has not (!) been
