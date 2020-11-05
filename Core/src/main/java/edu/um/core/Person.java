@@ -41,7 +41,7 @@ public class Person {
         return firstNames;
     }
 
-    protected String getPrivateKey() {
+    public String getPrivateKey() {
         return privateKey;
     }
 

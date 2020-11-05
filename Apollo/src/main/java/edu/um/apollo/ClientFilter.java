@@ -1,5 +1,6 @@
 package edu.um.apollo;
 
+import edu.um.core.RSA;
 import edu.um.core.protocol.PacketFactory;
 import edu.um.core.protocol.PacketParser;
 import edu.um.core.protocol.Packets;
@@ -9,7 +10,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 
 public class ClientFilter extends SimpleChannelInboundHandler<ByteBuf> {
@@ -46,7 +52,19 @@ public class ClientFilter extends SimpleChannelInboundHandler<ByteBuf> {
                     break;
 
                 case SEND_MESSAGE:
-                    System.out.println("RECEIVED message: " + packet.toString());
+                    try {
+                        System.out.println("RECEIVED message: " + RSA.decrypt(packet.get("message"), RSA.getPrivateKey(apollo.getPerson().getPrivateKey())));
+                    } catch (NoSuchPaddingException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (InvalidKeyException e) {
+                        e.printStackTrace();
+                    } catch (BadPaddingException e) {
+                        e.printStackTrace();
+                    } catch (IllegalBlockSizeException e) {
+                        e.printStackTrace();
+                    }
                     break;
 
 
