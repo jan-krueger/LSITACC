@@ -1,9 +1,6 @@
 package edu.um.maspalomas.filters;
 
 import edu.um.core.RSA;
-import org.glassfish.grizzly.filterchain.BaseFilter;
-import org.glassfish.grizzly.filterchain.FilterChainContext;
-import org.glassfish.grizzly.filterchain.NextAction;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -17,9 +14,9 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
 
-public class DecryptFilter extends BaseFilter {
+public class DecryptFilter  {
 
-    @Override
+    /*@Override
     public NextAction handleWrite(FilterChainContext ctx) {
         Object o = ctx.getMessage();
 
@@ -38,6 +35,6 @@ public class DecryptFilter extends BaseFilter {
 
         System.out.println("DecryptFilter: " + o.toString());
         return ctx.getInvokeAction();
-    }
+    }*/
 
 }
