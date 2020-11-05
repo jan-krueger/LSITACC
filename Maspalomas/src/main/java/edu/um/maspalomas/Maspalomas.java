@@ -1,52 +1,65 @@
 package edu.um.maspalomas;
 
 import edu.um.maspalomas.filters.ProtocolFilter;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.commons.cli.*;
-import org.glassfish.grizzly.filterchain.FilterChainBuilder;
-import org.glassfish.grizzly.filterchain.TransportFilter;
-import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
-import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
-import org.glassfish.grizzly.utils.StringFilter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 public class Maspalomas {
 
     private static final Logger logger = Logger.getLogger(Maspalomas.class.getSimpleName());
 
-    public static final String HOST = "localhost";
-
-
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         CommandLine arguments = parseArguments(args);
         final int port = Integer.parseUnsignedInt(arguments.getOptionValue("port"));
 
-        FilterChainBuilder filterChainBuilder = FilterChainBuilder.stateless();
+        new Maspalomas("localhost", port).run();
+    }
 
-        filterChainBuilder.add(new TransportFilter());
-        filterChainBuilder.add(new StringFilter());
-        filterChainBuilder.add(new ProtocolFilter());
-        //filterChainBuilder.add(new DecryptFilter());
+    private final String host;
+    private final int port;
 
-        // Create TCP transport
-        final TCPNIOTransport transport = TCPNIOTransportBuilder.newInstance().build();
+    public Maspalomas(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
 
-        transport.setProcessor(filterChainBuilder.build());
+    public void run() throws Exception {
+        EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
-            transport.bind(HOST, port);
-            logger.info(String.format("Starting server %s:%d", HOST, port));
-            transport.start();
+            ServerBootstrap b = new ServerBootstrap(); // (2)
+            b.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class) // (3)
+                    .childHandler(new ChannelInitializer<SocketChannel>() { // (4)
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new ProtocolFilter());
+                        }
+                    })
+                    .option(ChannelOption.SO_BACKLOG, 128)          // (5)
+                    .childOption(ChannelOption.SO_KEEPALIVE, true); // (6)
 
-            logger.info("Press any key to stop the server...");
-            System.in.read();
+            // Bind and start to accept incoming connections.
+            ChannelFuture f = b.bind(port).sync(); // (7)
+
+            // Wait until the server socket is closed.
+            // In this example, this does not happen, but you can do that to gracefully
+            // shut down your server.
+            f.channel().closeFuture().sync();
         } finally {
-            logger.info("Stopping transport...");
-            transport.shutdownNow();
-
-            logger.info("Stopped transport...");
+            workerGroup.shutdownGracefully();
+            bossGroup.shutdownGracefully();
         }
     }
 

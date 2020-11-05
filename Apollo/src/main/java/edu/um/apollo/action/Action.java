@@ -1,6 +1,8 @@
 package edu.um.apollo.action;
 
-import org.glassfish.grizzly.Connection;
+
+import edu.um.apollo.Apollo;
+import io.netty.channel.socket.SocketChannel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,19 +31,19 @@ public abstract class Action {
         return this.arguments.get("%" + argument);
     }
 
-    protected abstract boolean execute(Connection connection);
+    protected abstract boolean execute(Apollo apollo, SocketChannel socketChannel) throws InterruptedException;
 
-    public final boolean run(Connection connection) {
+    public final boolean run(Apollo apollo, SocketChannel socketChannel) {
         this.trials++;
         if(hasExpired()) {
             return false;
         }
-        this.execute(connection);
+        try {
+            this.execute(apollo, socketChannel);
+        } catch (InterruptedException e) {
+            e.printStackTrace(); //TODO handle
+        }
         return true;
-    }
-
-    public static interface Callback {
-        void execute(Connection connection);
     }
 
 }

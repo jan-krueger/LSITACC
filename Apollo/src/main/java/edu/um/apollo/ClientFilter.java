@@ -1,27 +1,42 @@
 package edu.um.apollo;
 
+import edu.um.core.protocol.PacketFactory;
 import edu.um.core.protocol.PacketParser;
 import edu.um.core.protocol.Packets;
-import edu.um.core.protocol.packets.*;
-import org.glassfish.grizzly.filterchain.BaseFilter;
-import org.glassfish.grizzly.filterchain.FilterChainContext;
-import org.glassfish.grizzly.filterchain.NextAction;
+import edu.um.core.protocol.packets.Packet;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-public class ClientFilter extends BaseFilter {
+public class ClientFilter extends SimpleChannelInboundHandler<ByteBuf> {
+
+    private final Apollo apollo;
+
+    public ClientFilter(Apollo apollo) {
+        this.apollo = apollo;
+    }
 
     @Override
-    public NextAction handleRead(FilterChainContext ctx) {
-        System.out.println("Server response: " + ctx.getMessage());
-        Optional<Packet> packetOptional = PacketParser.parse(ctx.getMessage());
+    public void channelActive(ChannelHandlerContext ctx) {
+        ctx.writeAndFlush(PacketFactory.createGreetServerPacket(apollo.getPerson()).build());
+    }
+
+
+    @Override
+    public void channelRead0(ChannelHandlerContext ctx, ByteBuf in) {
+        final String message = in.toString(StandardCharsets.UTF_8);
+        System.out.println("Server response: " + message);
+        Optional<Packet> packetOptional = PacketParser.parse(message);
 
         if(packetOptional.isPresent()) {
             final Packet packet = packetOptional.get();
 
             switch (Packets.byId(packet.getId()).get()) {
                 case GREET_CLIENT:
-                    Apollo.setServerPublicKey(packet.get("publicKey"));
+                    apollo.setServerPublicKey(packet.get("publicKey"));
                     Apollo.LOGGER.info("Server is greeting you");
                     break;
 
@@ -39,7 +54,12 @@ public class ClientFilter extends BaseFilter {
             }
 
         }
-        return ctx.getInvokeAction();
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
+        ctx.close();
     }
 
 }
