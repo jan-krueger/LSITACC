@@ -3,6 +3,9 @@ package edu.um.core.protocol.packets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import edu.um.core.protocol.Packets;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,8 +54,8 @@ public class Packet {
         return this;
     }
 
-    public String build() {
-        return buildObject().toString();
+    public ByteBuf build() {
+        return Unpooled.copiedBuffer(buildObject().toString(), CharsetUtil.UTF_8);
     }
 
     protected JsonObject buildObject() {
@@ -76,6 +79,6 @@ public class Packet {
 
     @Override
     public String toString() {
-        return this.build();
+        return this.buildObject().toString();
     }
 }

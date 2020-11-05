@@ -18,12 +18,12 @@ public class Maspalomas {
 
     private static final Logger logger = Logger.getLogger(Maspalomas.class.getSimpleName());
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         CommandLine arguments = parseArguments(args);
         final int port = Integer.parseUnsignedInt(arguments.getOptionValue("port"));
 
-        new Maspalomas("localhost", port);
+        new Maspalomas("localhost", port).run();
     }
 
     private final String host;

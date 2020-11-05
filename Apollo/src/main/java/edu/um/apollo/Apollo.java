@@ -7,149 +7,138 @@ import edu.um.apollo.action.Action;
 import edu.um.apollo.action.ActionParser;
 import edu.um.apollo.action.ActionQueue;
 import edu.um.core.Person;
-import edu.um.core.protocol.PacketFactory;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.commons.cli.*;
-import org.glassfish.grizzly.Connection;
-import org.glassfish.grizzly.Grizzly;
-import org.glassfish.grizzly.filterchain.FilterChainBuilder;
-import org.glassfish.grizzly.filterchain.TransportFilter;
-import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
-import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
-import org.glassfish.grizzly.utils.StringFilter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 public class Apollo {
 
     public final static Gson gson = new Gson();
-    public static final Logger LOGGER = Grizzly.logger(Apollo.class);
-    public static String serverPublicKey = null;
+    public static final Logger LOGGER = Logger.getLogger(Apollo.class.getSimpleName());
 
-    //--- configuration
-    private static Person person;
-    private static ActionQueue actionQueue = new ActionQueue();
-
-    private static String server_ip;
-    private static int server_port;
-
-    public static void main(String[] args) throws IOException,
-            ExecutionException, InterruptedException, TimeoutException {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         CommandLine cmd = parseArguments(args);
+
+        ActionQueue actionQueue = new ActionQueue();
+        Person person;
+        String server_ip;
+        int server_port;
+
+        final String path = cmd.getOptionValue("file");
+        JsonObject data = gson.fromJson(new String(Files.readAllBytes(Path.of(path))), JsonObject.class);
+
         {
-            final String path = cmd.getOptionValue("file");
-            JsonObject data = gson.fromJson(new String(Files.readAllBytes(Path.of(path))), JsonObject.class);
+            JsonObject personData = data.getAsJsonObject("person");
+            Person.Builder builder = Person.builder();
 
-            {
-                JsonObject personData = data.getAsJsonObject("person");
-                Person.Builder builder = Person.builder();
+            String[] names = personData.get("name").getAsString().split(", ");
+            builder.id(personData.get("id").getAsString());
+            builder.lastName(names[0]);
+            builder.publicKey(personData.getAsJsonObject("keys").get("public").getAsString());
+            builder.privateKey(personData.getAsJsonObject("keys").get("private").getAsString());
 
-                String[] names = personData.get("name").getAsString().split(", ");
-                builder.id(personData.get("id").getAsString());
-                builder.lastName(names[0]);
-                builder.publicKey(personData.getAsJsonObject("keys").get("public").getAsString());
-                builder.privateKey(personData.getAsJsonObject("keys").get("private").getAsString());
-
-                for (int i = 1; i < names.length; i++) {
-                    builder.firstName(names[i]);
-                }
-
-                person = builder.build();
+            for (int i = 1; i < names.length; i++) {
+                builder.firstName(names[i]);
             }
 
-            {
-                JsonObject serverData = data.getAsJsonObject("server");
-                server_ip = serverData.get("ip").getAsString();
-                server_port = serverData.get("port").getAsInt();
-            }
-
-            {
-                JsonArray actionsArray = data.getAsJsonArray("actions");
-                actionsArray.forEach(entry -> {
-                    actionQueue.add(ActionParser.parse(entry.getAsString()));
-                });
-            }
-
+            person = builder.build();
         }
 
-        assert person != null;
+        {
+            JsonObject serverData = data.getAsJsonObject("server");
+            server_ip = serverData.get("ip").getAsString();
+            server_port = serverData.get("port").getAsInt();
+        }
 
-        Connection connection = null;
-        // Create a FilterChain using FilterChainBuilder
-        FilterChainBuilder filterChainBuilder = FilterChainBuilder.stateless();
-        // Add TransportFilter, which is responsible
-        // for reading and writing data to the connection
-        filterChainBuilder.add(new TransportFilter());
-        // StringFilter is responsible for Buffer <-> String conversion
-        filterChainBuilder.add(new StringFilter(StandardCharsets.UTF_8));
+        {
+            JsonArray actionsArray = data.getAsJsonArray("actions");
+            actionsArray.forEach(entry -> {
+                actionQueue.add(ActionParser.parse(entry.getAsString()));
+            });
+        }
 
-        // ClientFilter is responsible for redirecting server responses to the standard output
-        filterChainBuilder.add(new ClientFilter());
+        new Apollo(person, actionQueue, server_ip, server_port).run();
 
-        // Create TCP transport
-        final TCPNIOTransport transport = TCPNIOTransportBuilder.newInstance().build();
-        transport.setProcessor(filterChainBuilder.build());
+    }
 
+    //--- configuration
+    public String serverPublicKey = null;
+    private Person person;
+    private ActionQueue actionQueue;
+
+    private String server_ip;
+    private int server_port;
+
+
+    public Apollo(Person person, ActionQueue actionQueue, String server_ip, int server_port) {
+        this.person = person;
+        this.actionQueue = actionQueue;
+        this.server_ip = server_ip;
+        this.server_port = server_port;
+    }
+
+    public void run() throws InterruptedException {
+        EventLoopGroup group = new NioEventLoopGroup();
         try {
-            // start the transport
-            transport.start();
+            Bootstrap b = new Bootstrap();
+            b.group(group)
+                .channel(NioSocketChannel.class)
+                .remoteAddress(new InetSocketAddress(server_ip, server_port))
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    public void initChannel(SocketChannel ch) throws IOException {
+                        ch.pipeline().addLast(new ClientFilter(Apollo.this));
+                    }
+                });
+                ChannelFuture f = b.connect().sync();
 
-            // perform async. connect to the server
-            Future<Connection> future = transport.connect(server_ip, server_port);
-            // wait for connect operation to complete
-            connection = future.get(10, TimeUnit.SECONDS);
+            BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(System.in));
 
-            assert connection != null;
+            while (true) {
+                String input = reader.readLine();
+                System.out.println("read: " + input);
+                actionQueue.next().ifPresent(action -> {
+                    action.run(Apollo.this, (SocketChannel) f.channel());
+                });
 
-            //introduce us to the server
-            connection.write(PacketFactory.createGreetServerPacket(person).build());
-
-
-            System.out.println("Ready... (\"q\" to exit)");
-            final BufferedReader inReader = new BufferedReader(new InputStreamReader(System.in));
-
-            Optional<Action> action;
-            do  {
-                action = actionQueue.next();
-                inReader.readLine();
-
-                if(action.isPresent()) {
-                    action.get().run(connection);
+                if(input.equals("q")) {
+                    break;
                 }
-                System.out.println("executed action " + action);
-            } while (action.isPresent());
-        } finally {
-            // close the client connection
-            if (connection != null) {
-                connection.close();
             }
 
-            // stop the transport
-            transport.shutdownNow();
+            f.channel().closeFuture().sync();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            group.shutdownGracefully().sync();
         }
     }
 
-    public static Person getPerson() {
+    public Person getPerson() {
         return person;
     }
 
-    public static String getServerPublicKey() {
+    public String getServerPublicKey() {
         return serverPublicKey;
     }
 
-    public static void setServerPublicKey(String serverPublicKey) {
-        Apollo.serverPublicKey = serverPublicKey;
+    public void setServerPublicKey(String serverPublicKey) {
+        this.serverPublicKey = serverPublicKey;
     }
 
     private static CommandLine parseArguments(String[] args) {
