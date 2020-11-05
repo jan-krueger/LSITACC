@@ -7,7 +7,7 @@ import java.util.Queue;
 public class ActionQueue {
 
     private final Queue<Action> actions = new LinkedList<>();
-    private Action next;
+    private Action current;
 
     public ActionQueue() { }
 
@@ -15,25 +15,30 @@ public class ActionQueue {
         this.actions.add(action);
     }
 
+    public Action getCurrent() {
+        return this.current;
+    }
+
     public Optional<Action> next() {
 
-        if(next == null) {
+        if(current == null) {
             if(actions.isEmpty()) {
                 return Optional.empty();
             }
-            this.next = this.actions.peek();
-            return Optional.of(this.next);
+            this.current = this.actions.peek();
+            return Optional.of(this.current);
         }
 
-        if(this.next.hasExpired()) {
+        if(this.current.hasExpired() || this.current.isSuccess()) {
+            this.actions.poll();
             if(this.actions.isEmpty()) {
                 return Optional.empty();
             }
-            this.next = this.actions.poll();
-            return Optional.of(this.next);
+            this.current = this.actions.peek();
+            return Optional.of(this.current);
         }
 
-        return Optional.of(this.next);
+        return Optional.of(this.current);
     }
 
 }

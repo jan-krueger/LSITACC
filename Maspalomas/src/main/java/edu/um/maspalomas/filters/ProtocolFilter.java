@@ -7,24 +7,29 @@ import edu.um.core.protocol.Packets;
 import edu.um.core.protocol.packets.GreetServerPacket;
 import edu.um.core.protocol.packets.Packet;
 import edu.um.core.protocol.packets.SendMessagePacket;
+import edu.um.maspalomas.Maspalomas;
 import edu.um.maspalomas.PersonRegister;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.CharsetUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
 public class ProtocolFilter extends ChannelInboundHandlerAdapter {
 
+
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws InterruptedException { // (2)
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws InterruptedException {
 
         ByteBuf byteBuf = (ByteBuf) msg;
-        Optional<Packet> packetOptional = PacketParser.parse(byteBuf.toString(CharsetUtil.UTF_8));
+        final String message = byteBuf.toString(StandardCharsets.UTF_8);
+        Maspalomas.LOGGER.info(message);
+
+        final Optional<Packet> packetOptional = PacketParser.parse(message);
+
 
         if (packetOptional.isPresent()) {
             final Packet packet = packetOptional.get();
@@ -39,14 +44,7 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
                     }
 
                     if (PersonRegister.add(person, ctx.channel())) {
-                        ctx.writeAndFlush(PacketFactory.createGreetClientPacket("server-public-key").build()).sync()
-                        .addListener(new ChannelFutureListener() {
-                            public void operationComplete(ChannelFuture future) {
-                                // Perform post-closure operation
-                                // ...
-                                System.out.println("send");
-                            }
-                        });
+                        ctx.writeAndFlush(PacketFactory.createGreetClientPacket("server-public-key").build()).sync();
                     } else {
                         throw new IllegalStateException();
                     }
@@ -57,7 +55,8 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
                     List<PersonRegister.Entry> receivers = PersonRegister.find(messagePacket.get("receiver"));
 
                     if (receivers.isEmpty()) {
-                        //TODO return ExecutedActionPacket = false
+                        ctx.writeAndFlush(PacketFactory.createExecuteActionPacket(false).build()).sync();
+                        return;
                     }
 
 
@@ -66,6 +65,7 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
                         .sync();
                         System.out.printf("message for %s: %s\n", receiver.getPerson().getId(), messagePacket.get("message"));
                     }
+                    ctx.writeAndFlush(PacketFactory.createExecuteActionPacket(true).build()).sync();
                     break;
 
                 default:

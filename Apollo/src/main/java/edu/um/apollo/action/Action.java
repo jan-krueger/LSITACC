@@ -9,11 +9,11 @@ import java.util.Map;
 
 public abstract class Action {
 
-    private final int max_trials;
-
     private final Map<String, String> arguments = new HashMap<>();
-
+    private final int max_trials;
     private int trials = 0;
+
+    private boolean success = false;
 
     public Action(int max_trials) {
         this.max_trials = max_trials;
@@ -21,6 +21,14 @@ public abstract class Action {
 
     public boolean hasExpired() {
         return (this.trials >= max_trials);
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
     }
 
     public void addArg(String argument, String value) {

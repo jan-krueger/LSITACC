@@ -37,4 +37,9 @@ public class PacketFactory {
         return packet;
     }
 
+    public static ExecutedActionPacket createExecuteActionPacket(boolean success) {
+        ExecutedActionPacket packet = Packets.EXECUTED_ACTION.create().as(ExecutedActionPacket.class);
+        packet.add("success", String.valueOf(success));
+        return packet;
+    }
 }

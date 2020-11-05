@@ -16,6 +16,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.commons.cli.*;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -133,6 +134,10 @@ public class Apollo {
         return person;
     }
 
+    public ActionQueue getActionQueue() {
+        return this.actionQueue;
+    }
+
     public String getServerPublicKey() {
         return serverPublicKey;
     }
@@ -155,4 +160,5 @@ public class Apollo {
         }
         return null;
     }
+
 }

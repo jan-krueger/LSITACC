@@ -28,7 +28,7 @@ public class ClientFilter extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     public void channelRead0(ChannelHandlerContext ctx, ByteBuf in) {
         final String message = in.toString(StandardCharsets.UTF_8);
-        System.out.println("Server response: " + message);
+        Apollo.LOGGER.info(message);
         Optional<Packet> packetOptional = PacketParser.parse(message);
 
         if(packetOptional.isPresent()) {
@@ -40,11 +40,13 @@ public class ClientFilter extends SimpleChannelInboundHandler<ByteBuf> {
                     Apollo.LOGGER.info("Server is greeting you");
                     break;
 
+                case EXECUTED_ACTION:
+                    apollo.getActionQueue().getCurrent().setSuccess(Boolean.parseBoolean(packet.get("success")));
+                    break;
 
                 case SEND_MESSAGE:
                     System.out.println("RECEIVED message: " + packet.toString());
                     break;
-
                 case ACK:
                     break;
 

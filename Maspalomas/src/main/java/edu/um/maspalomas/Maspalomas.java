@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 public class Maspalomas {
 
-    private static final Logger logger = Logger.getLogger(Maspalomas.class.getSimpleName());
+    public static final Logger LOGGER = Logger.getLogger(Maspalomas.class.getSimpleName());
 
     public static void main(String[] args) throws Exception {
 
