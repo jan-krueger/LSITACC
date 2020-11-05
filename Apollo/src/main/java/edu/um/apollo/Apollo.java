@@ -3,10 +3,10 @@ package edu.um.apollo;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import edu.um.apollo.action.Action;
 import edu.um.apollo.action.ActionParser;
 import edu.um.apollo.action.ActionQueue;
 import edu.um.core.Person;
+import edu.um.core.PersonRegister;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -16,7 +16,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.commons.cli.*;
 
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -81,6 +80,7 @@ public class Apollo {
     private Person person;
     private ActionQueue actionQueue;
 
+    private final PersonRegister personRegister = new PersonRegister();
     private String server_ip;
     private int server_port;
 
@@ -90,6 +90,10 @@ public class Apollo {
         this.actionQueue = actionQueue;
         this.server_ip = server_ip;
         this.server_port = server_port;
+    }
+
+    public PersonRegister getPersonRegister() {
+        return personRegister;
     }
 
     public void run() throws InterruptedException {
@@ -116,7 +120,6 @@ public class Apollo {
                 actionQueue.next().ifPresent(action -> {
                     action.run(Apollo.this, (SocketChannel) f.channel());
                 });
-
                 if(input.equals("q")) {
                     break;
                 }

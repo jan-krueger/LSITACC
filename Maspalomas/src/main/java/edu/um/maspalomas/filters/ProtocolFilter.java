@@ -8,11 +8,10 @@ import edu.um.core.protocol.packets.GreetServerPacket;
 import edu.um.core.protocol.packets.Packet;
 import edu.um.core.protocol.packets.SendMessagePacket;
 import edu.um.maspalomas.Maspalomas;
-import edu.um.maspalomas.PersonRegister;
+import edu.um.core.PersonRegister;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.util.CharsetUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -20,6 +19,11 @@ import java.util.Optional;
 
 public class ProtocolFilter extends ChannelInboundHandlerAdapter {
 
+    private final Maspalomas maspalomas;
+
+    public ProtocolFilter(Maspalomas maspalomas) {
+        this.maspalomas = maspalomas;
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws InterruptedException {
@@ -38,12 +42,13 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
                 case GREET_SERVER:
                     Person person = packet.as(GreetServerPacket.class).getPerson();
 
-                    if (PersonRegister.byId(person.getId()).isPresent()) {
+                    if (maspalomas.getPersonRegister().byId(person.getId()).isPresent()) {
                         ctx.writeAndFlush(PacketFactory.createNotAcknowledgePacket().build()).sync();
+                        ctx.close().sync();
                         return;
                     }
 
-                    if (PersonRegister.add(person, ctx.channel())) {
+                    if (maspalomas.getPersonRegister().add(person, ctx.channel())) {
                         ctx.writeAndFlush(PacketFactory.createGreetClientPacket("server-public-key").build()).sync();
                     } else {
                         throw new IllegalStateException();
@@ -52,7 +57,7 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
 
                 case SEND_MESSAGE:
                     SendMessagePacket messagePacket = packet.as(SendMessagePacket.class);
-                    List<PersonRegister.Entry> receivers = PersonRegister.find(messagePacket.get("receiver"));
+                    List<PersonRegister.Entry> receivers = maspalomas.getPersonRegister().find(messagePacket.get("receiver"));
 
                     if (receivers.isEmpty()) {
                         ctx.writeAndFlush(PacketFactory.createExecuteActionPacket(false).build()).sync();
@@ -66,6 +71,17 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
                         System.out.printf("message for %s: %s\n", receiver.getPerson().getId(), messagePacket.get("message"));
                     }
                     ctx.writeAndFlush(PacketFactory.createExecuteActionPacket(true).build()).sync();
+                    break;
+
+                case REQUEST_PUBLIC_KEY:
+                    List<PersonRegister.Entry> list = maspalomas.getPersonRegister().find(packet.get("identifier"));
+                    if(list.isEmpty()) {
+                        ctx.writeAndFlush(PacketFactory.createNotAcknowledgePacket().build()).sync();
+                        return;
+                    }
+                    for(PersonRegister.Entry entry : list) {
+                        ctx.writeAndFlush(entry.getPerson().asPersonPacket().build()).sync();
+                    }
                     break;
 
                 default:

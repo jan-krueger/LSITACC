@@ -1,5 +1,8 @@
 package edu.um.core;
 
+import edu.um.core.protocol.packets.PersonPacket;
+import edu.um.core.protocol.packets.SendPersonPacket;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +47,15 @@ public class Person {
 
     public String getPublicKey() {
         return publicKey;
+    }
+
+    public SendPersonPacket asPersonPacket() {
+        SendPersonPacket packet = new SendPersonPacket();
+        packet.add("id", this.id);
+        packet.add("firstNames", String.join(" ", this.firstNames));
+        packet.add("lastName", this.lastName);
+        packet.add("publicKey", this.publicKey);
+        return packet;
     }
 
     public static Builder builder() {

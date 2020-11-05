@@ -42,4 +42,12 @@ public class PacketFactory {
         packet.add("success", String.valueOf(success));
         return packet;
     }
+
+    public static RequestPublicKeyPacket createRequestPublicKeyPacket(String identifier) {
+        RequestPublicKeyPacket packet = Packets.REQUEST_PUBLIC_KEY.create().as(RequestPublicKeyPacket.class);
+        packet.add("identifier", identifier);
+        return packet;
+    }
+
+
 }

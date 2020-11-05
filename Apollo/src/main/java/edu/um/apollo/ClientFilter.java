@@ -4,6 +4,7 @@ import edu.um.core.protocol.PacketFactory;
 import edu.um.core.protocol.PacketParser;
 import edu.um.core.protocol.Packets;
 import edu.um.core.protocol.packets.Packet;
+import edu.um.core.protocol.packets.SendPersonPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -47,6 +48,13 @@ public class ClientFilter extends SimpleChannelInboundHandler<ByteBuf> {
                 case SEND_MESSAGE:
                     System.out.println("RECEIVED message: " + packet.toString());
                     break;
+
+
+                case SEND_PERSON:
+                    SendPersonPacket sendPersonPacket = packet.as(SendPersonPacket.class);
+                    apollo.getPersonRegister().add(sendPersonPacket.getPerson());
+                    break;
+
                 case ACK:
                     break;
 

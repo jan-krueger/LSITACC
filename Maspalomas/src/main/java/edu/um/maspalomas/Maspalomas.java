@@ -1,5 +1,6 @@
 package edu.um.maspalomas;
 
+import edu.um.core.PersonRegister;
 import edu.um.maspalomas.filters.ProtocolFilter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -29,9 +30,15 @@ public class Maspalomas {
     private final String host;
     private final int port;
 
+    private final PersonRegister personRegister = new PersonRegister();
+
     public Maspalomas(String host, int port) {
         this.host = host;
         this.port = port;
+    }
+
+    public PersonRegister getPersonRegister() {
+        return personRegister;
     }
 
     public void run() throws Exception {
@@ -44,7 +51,7 @@ public class Maspalomas {
                     .childHandler(new ChannelInitializer<SocketChannel>() { // (4)
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new ProtocolFilter());
+                            ch.pipeline().addLast(new ProtocolFilter(Maspalomas.this));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)          // (5)

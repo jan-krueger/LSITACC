@@ -18,6 +18,11 @@ public enum Packets {
 
     EXECUTED_ACTION(5, ExecutedActionPacket.class),
 
+    REQUEST_PUBLIC_KEY(6, RequestPublicKeyPacket.class),
+
+    SEND_PERSON(7, SendPersonPacket.class),
+
+
 
     //--- This message is send as a response to a received package from the client to in case the action has not (!) been
     // executed.

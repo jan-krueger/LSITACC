@@ -39,6 +39,10 @@ public abstract class Action {
         return this.arguments.get("%" + argument);
     }
 
+    public boolean pre(Apollo apollo, SocketChannel socketChannel) throws InterruptedException {
+        return true;
+    }
+
     protected abstract boolean execute(Apollo apollo, SocketChannel socketChannel) throws InterruptedException;
 
     public final boolean run(Apollo apollo, SocketChannel socketChannel) {
@@ -46,11 +50,15 @@ public abstract class Action {
         if(hasExpired()) {
             return false;
         }
+
         try {
-            this.execute(apollo, socketChannel);
+            if(this.pre(apollo, socketChannel)) {
+                this.execute(apollo, socketChannel);
+            }
         } catch (InterruptedException e) {
-            e.printStackTrace(); //TODO handle
+            e.printStackTrace(); //handle
         }
+
         return true;
     }
 
