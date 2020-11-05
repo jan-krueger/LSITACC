@@ -1,7 +1,5 @@
 package edu.um.maspalomas;
 
-import edu.um.maspalomas.filters.DecryptFilter;
-import edu.um.maspalomas.filters.EchoFilter;
 import edu.um.maspalomas.filters.ProtocolFilter;
 import org.apache.commons.cli.*;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
@@ -32,7 +30,6 @@ public class Maspalomas {
         filterChainBuilder.add(new StringFilter());
         filterChainBuilder.add(new ProtocolFilter());
         //filterChainBuilder.add(new DecryptFilter());
-        filterChainBuilder.add(new EchoFilter());
 
         // Create TCP transport
         final TCPNIOTransport transport = TCPNIOTransportBuilder.newInstance().build();

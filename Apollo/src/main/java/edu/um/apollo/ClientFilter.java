@@ -25,6 +25,11 @@ public class ClientFilter extends BaseFilter {
                     Apollo.LOGGER.info("Server is greeting you");
                     break;
 
+
+                case SEND_MESSAGE:
+                    System.out.println("RECEIVED message: " + packet.toString());
+                    break;
+
                 case ACK:
                     break;
 

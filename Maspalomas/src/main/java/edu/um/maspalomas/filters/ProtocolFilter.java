@@ -32,7 +32,7 @@ public class ProtocolFilter extends BaseFilter {
                         return ctx.getStopAction();
                     }
 
-                    if(PersonRegister.add(person)) {
+                    if(PersonRegister.add(person, ctx.getAddress())) {
                         //TODO get actual server public key
                         ctx.write(ctx.getAddress(), PacketFactory.createGreetClientPacket("server-public-key").build(), null);
                     } else {
@@ -42,16 +42,17 @@ public class ProtocolFilter extends BaseFilter {
 
                 case SEND_MESSAGE:
                     SendMessagePacket messagePacket = packet.as(SendMessagePacket.class);
-                    List<Person> receivers = PersonRegister.find(messagePacket.get("receiver"));
+                    List<PersonRegister.Entry> receivers = PersonRegister.find(messagePacket.get("receiver"));
 
                     if(receivers.isEmpty()) {
                         //TODO return ExecutedActionPacket = false
                     }
 
-                    for(Person receiver : receivers) {
-                        System.out.printf("message for %s: %s\n", receiver.getId(), messagePacket.get("message"));
-                    }
 
+                    for(PersonRegister.Entry receiver : receivers) {
+                        ctx.write(receiver.getAddress(), PacketFactory.createSendMessagePacket(receiver.getPerson(), receiver.getPerson().getId(), messagePacket.get("message")).build(), null);
+                        System.out.printf("message for %s: %s\n", receiver.getPerson().getId(), messagePacket.get("message"));
+                    }
                     break;
 
                 default:

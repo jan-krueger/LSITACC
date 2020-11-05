@@ -20,9 +20,9 @@ public class GreetServerPacket extends Packet {
     public Person getPerson() {
         Person.Builder builder = Person.builder()
                 .id(this.get("id"))
-                .firstName(this.get("id"))
-                .publicKey(this.get("id"))
-                .privateKey(this.get("id"));
+                .lastName(this.get("lastName"))
+                .publicKey(this.get("publicKey"))
+                .privateKey(this.get("privateKey"));
 
         Arrays.stream(this.get("firstNames").split(" ")).forEach(builder::firstName);
         return builder.build();

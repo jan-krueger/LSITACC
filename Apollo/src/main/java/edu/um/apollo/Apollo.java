@@ -113,7 +113,7 @@ public class Apollo {
             assert connection != null;
 
             //introduce us to the server
-            connection.write(PacketFactory.createGreetServerPacket(Person.builder().id("5312313").firstName("Bob").lastName("Flower Tes2t").publicKey("publicKey").privateKey("privatekey").build()).build());
+            connection.write(PacketFactory.createGreetServerPacket(person).build());
 
 
             System.out.println("Ready... (\"q\" to exit)");
