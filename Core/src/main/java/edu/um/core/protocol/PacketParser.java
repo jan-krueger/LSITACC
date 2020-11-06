@@ -3,8 +3,12 @@ package edu.um.core.protocol;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+import edu.um.core.Core;
+import edu.um.core.RSA;
 import edu.um.core.protocol.packets.Packet;
 
+import java.security.PrivateKey;
 import java.util.Optional;
 
 public class PacketParser {
@@ -13,8 +17,19 @@ public class PacketParser {
 
     private PacketParser() {}
 
-    public static Optional<Packet> parse(String data) {
-        JsonObject object = gson.fromJson(data, JsonObject.class);
+    public static Optional<Packet> parse(String data, PrivateKey privateKey) {
+        JsonObject object;
+
+        try {
+            object = gson.fromJson(data, JsonObject.class);
+        } catch (JsonSyntaxException exception) {
+            String decryptedData = RSA.decrypt(data, privateKey);
+            if(decryptedData == null) {
+                Core.LOGGER.warning("Invalid packet could not be decrypted.");
+                return null;
+            }
+            object = gson.fromJson(data, JsonObject.class);
+        }
 
         if(object.has("id")) {
             Optional<Packet> packet = Packets.create(object.get("id").getAsInt());
@@ -29,6 +44,8 @@ public class PacketParser {
                 });
                 return packet;
             }
+
+            return packet;
 
         }
 

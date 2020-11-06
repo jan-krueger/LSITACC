@@ -7,11 +7,6 @@ import edu.um.core.RSA;
 import edu.um.core.protocol.PacketFactory;
 import io.netty.channel.socket.SocketChannel;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public class SendMessageAction extends Action {
@@ -36,23 +31,11 @@ public class SendMessageAction extends Action {
     protected boolean execute(Apollo apollo, SocketChannel socketChannel) throws InterruptedException {
         List<PersonRegister.Entry> receivers = apollo.getPersonRegister().find(getArg("receiver"));
         for(PersonRegister.Entry receiver : receivers) {
-            try {
-                socketChannel.writeAndFlush(
-                    PacketFactory.createSendMessagePacket(apollo.getPerson(), receiver.getPerson().getId(),
-                            RSA.encrypt(getArg("message"), RSA.getPublicKey(receiver.getPerson().getPublicKey()))
-                    ).build()
-                ).sync(); //TODO encrypt
-            } catch (BadPaddingException e) {
-                e.printStackTrace();
-            } catch (IllegalBlockSizeException e) {
-                e.printStackTrace();
-            } catch (InvalidKeyException e) {
-                e.printStackTrace();
-            } catch (NoSuchPaddingException e) {
-                e.printStackTrace();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            }
+            socketChannel.writeAndFlush(
+                PacketFactory.createSendMessagePacket(apollo.getPerson(), receiver.getPerson().getId(),
+                        RSA.encrypt(getArg("message"), receiver.getPerson().getPublicKey())
+                ).build()
+            ).sync(); //TODO encrypt
         }
         return true;
     }

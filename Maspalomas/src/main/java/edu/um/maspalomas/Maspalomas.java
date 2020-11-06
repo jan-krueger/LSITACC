@@ -1,6 +1,8 @@
 package edu.um.maspalomas;
 
+import edu.um.core.PacketDecoder;
 import edu.um.core.PersonRegister;
+import edu.um.core.RSA;
 import edu.um.maspalomas.filters.ProtocolFilter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -13,6 +15,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.logging.Logger;
 
 public class Maspalomas {
@@ -29,12 +34,20 @@ public class Maspalomas {
 
     private final String host;
     private final int port;
+    private PrivateKey privateKey;
+    private PublicKey publicKey;
 
     private final PersonRegister personRegister = new PersonRegister();
 
     public Maspalomas(String host, int port) {
         this.host = host;
         this.port = port;
+        try {
+            privateKey = RSA.getPrivateKey(Path.of("./test-certificates/server.pri"));
+            publicKey = RSA.getPublicKey(Path.of("./test-certificates/server.pub"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public PersonRegister getPersonRegister() {
@@ -42,27 +55,24 @@ public class Maspalomas {
     }
 
     public void run() throws Exception {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
-            ServerBootstrap b = new ServerBootstrap(); // (2)
+            ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class) // (3)
-                    .childHandler(new ChannelInitializer<SocketChannel>() { // (4)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
+                        public void initChannel(SocketChannel ch) {
+                            ch.pipeline().addLast(new PacketDecoder(privateKey));
                             ch.pipeline().addLast(new ProtocolFilter(Maspalomas.this));
                         }
                     })
-                    .option(ChannelOption.SO_BACKLOG, 128)          // (5)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true); // (6)
+                    .option(ChannelOption.SO_BACKLOG, 128)
+                    .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            // Bind and start to accept incoming connections.
-            ChannelFuture f = b.bind(port).sync(); // (7)
+            ChannelFuture f = b.bind(port).sync();
 
-            // Wait until the server socket is closed.
-            // In this example, this does not happen, but you can do that to gracefully
-            // shut down your server.
             f.channel().closeFuture().sync();
         } finally {
             workerGroup.shutdownGracefully();
@@ -83,6 +93,10 @@ public class Maspalomas {
             System.exit(1);
         }
         return null;
+    }
+
+    public PublicKey getServerPublicKey() {
+        return this.publicKey;
     }
 
 }

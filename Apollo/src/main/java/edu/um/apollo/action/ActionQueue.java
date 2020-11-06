@@ -14,12 +14,10 @@ public class ActionQueue {
         this.actions.add(action);
     }
 
-    public void scheduleNow(Action action) {
-        //TODO give actions ids, otherwise if we send a packet then call scheduleNow for a new action then it will
-        // mark this action as successful or failure even though it meant another packet
-        this.current = action;
-        this.actions.addFirst(action);
+    public boolean isEmpty() {
+        return actions.isEmpty();
     }
+
 
     public Action getCurrent() {
         return this.current;

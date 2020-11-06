@@ -65,18 +65,26 @@ public class RSA {
         return null;
     }
 
-    public static String encrypt(String data, PublicKey publicKey) throws BadPaddingException, IllegalBlockSizeException,
-            InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        return Base64.getEncoder().encodeToString(cipher.doFinal(data.getBytes()));
+    public static String encrypt(String data, PublicKey publicKey) {
+        try {
+            Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            return Base64.getEncoder().encodeToString(cipher.doFinal(data.getBytes()));
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    public static String decrypt(String data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException,
-            InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        return new String(cipher.doFinal(Base64.getDecoder().decode(data)));
+    public static String decrypt(String data, PrivateKey privateKey) {
+        try {
+            Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+            return new String(cipher.doFinal(Base64.getDecoder().decode(data)));
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 

@@ -1,6 +1,7 @@
 package edu.um.core.protocol.packets;
 
 import edu.um.core.Person;
+import edu.um.core.RSA;
 import edu.um.core.protocol.Packets;
 
 import java.util.Arrays;
@@ -21,8 +22,7 @@ public class PersonPacket extends Packet {
         Person.Builder builder = Person.builder()
                 .id(this.get("id"))
                 .lastName(this.get("lastName"))
-                .publicKey(this.get("publicKey"))
-                .privateKey(this.get("privateKey"));
+                .publicKey(RSA.getPublicKey(this.get("publicKey")));
 
         Arrays.stream(this.get("firstNames").split(" ")).forEach(builder::firstName);
         return builder.build();

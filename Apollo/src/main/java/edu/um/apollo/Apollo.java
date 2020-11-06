@@ -5,8 +5,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import edu.um.apollo.action.ActionParser;
 import edu.um.apollo.action.ActionQueue;
+import edu.um.apollo.action.actions.SendPacketAction;
+import edu.um.core.PacketDecoder;
 import edu.um.core.Person;
 import edu.um.core.PersonRegister;
+import edu.um.core.RSA;
+import edu.um.core.protocol.PacketFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -16,9 +20,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.commons.cli.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,8 +50,8 @@ public class Apollo {
             String[] names = personData.get("name").getAsString().split(", ");
             builder.id(personData.get("id").getAsString());
             builder.lastName(names[0]);
-            builder.publicKey(personData.getAsJsonObject("keys").get("public").getAsString());
-            builder.privateKey(personData.getAsJsonObject("keys").get("private").getAsString());
+            builder.publicKey(RSA.getPublicKey(personData.getAsJsonObject("keys").get("public").getAsString()));
+            builder.privateKey(RSA.getPrivateKey(personData.getAsJsonObject("keys").get("private").getAsString()));
 
             for (int i = 1; i < names.length; i++) {
                 builder.firstName(names[i]);
@@ -66,6 +68,8 @@ public class Apollo {
 
         {
             JsonArray actionsArray = data.getAsJsonArray("actions");
+            actionQueue.add(new SendPacketAction(PacketFactory.createGreetServerPacket(person)));
+
             actionsArray.forEach(entry -> {
                 actionQueue.add(ActionParser.parse(entry.getAsString()));
             });
@@ -84,6 +88,7 @@ public class Apollo {
     private String server_ip;
     private int server_port;
 
+    private SocketChannel channel;
 
     public Apollo(Person person, ActionQueue actionQueue, String server_ip, int server_port) {
         this.person = person;
@@ -105,32 +110,27 @@ public class Apollo {
                 .remoteAddress(new InetSocketAddress(server_ip, server_port))
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
-                    public void initChannel(SocketChannel ch) throws IOException {
-                        ch.pipeline().addLast(new ClientFilter(Apollo.this));
+                    public void initChannel(SocketChannel sc)  {
+                        sc.pipeline().addLast(new PacketDecoder(person.getPrivateKey()));
+                        sc.pipeline().addLast(new ClientFilter(Apollo.this));
                     }
                 });
                 ChannelFuture f = b.connect().sync();
+            this.channel = (SocketChannel) f.channel();
 
-            BufferedReader reader =
-                    new BufferedReader(new InputStreamReader(System.in));
-
-            while (true) {
-                String input = reader.readLine();
-                System.out.println("read: " + input);
-                actionQueue.next().ifPresent(action -> {
-                    action.run(Apollo.this, (SocketChannel) f.channel());
-                });
-                if(input.equals("q")) {
-                    break;
-                }
-            }
+            Thread.sleep(5000);
+            advanceActionQueue();
 
             f.channel().closeFuture().sync();
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
             group.shutdownGracefully().sync();
         }
+    }
+
+    public void advanceActionQueue() {
+        actionQueue.next().ifPresent(action -> {
+            action.run(Apollo.this, this.channel);
+        });
     }
 
     public Person getPerson() {

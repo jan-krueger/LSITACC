@@ -14,6 +14,8 @@ import java.util.Set;
 
 public class Packet {
 
+    public static final String PACKET_SEPARATOR = "\n";
+
     private final int id;
     private final Set<String> requiredData;
     private Map<String, String> payload = new HashMap<>();
@@ -55,7 +57,7 @@ public class Packet {
     }
 
     public ByteBuf build() {
-        return Unpooled.copiedBuffer(buildObject().toString(), CharsetUtil.UTF_8);
+        return Unpooled.copiedBuffer(buildObject().toString() + PACKET_SEPARATOR, CharsetUtil.UTF_8);
     }
 
     protected JsonObject buildObject() {

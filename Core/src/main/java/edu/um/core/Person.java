@@ -1,9 +1,11 @@
 package edu.um.core;
 
-import edu.um.core.protocol.packets.PersonPacket;
 import edu.um.core.protocol.packets.SendPersonPacket;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 public class Person {
@@ -13,10 +15,10 @@ public class Person {
 
     private final String lastName;
     private final String[] firstNames;
-    private final String privateKey;
-    private final String publicKey;
+    private final PrivateKey privateKey;
+    private final PublicKey publicKey;
 
-    private Person(String id, String fullNameIdentifier, String lastName, String[] firstNames, String privateKey, String publicKey) {
+    private Person(String id, String fullNameIdentifier, String lastName, String[] firstNames, PrivateKey privateKey, PublicKey publicKey) {
         this.id = id;
         this.fullNameIdentifier = fullNameIdentifier;
         this.lastName = lastName;
@@ -41,11 +43,11 @@ public class Person {
         return firstNames;
     }
 
-    public String getPrivateKey() {
+    public PrivateKey getPrivateKey() {
         return privateKey;
     }
 
-    public String getPublicKey() {
+    public PublicKey getPublicKey() {
         return publicKey;
     }
 
@@ -54,7 +56,7 @@ public class Person {
         packet.add("id", this.id);
         packet.add("firstNames", String.join(" ", this.firstNames));
         packet.add("lastName", this.lastName);
-        packet.add("publicKey", this.publicKey);
+        packet.add("publicKey", Base64.getEncoder().encodeToString(this.publicKey.getEncoded()));
         return packet;
     }
 
@@ -67,8 +69,8 @@ public class Person {
         private String id;
         private String lastName;
         private List<String> firstNames = new ArrayList<>();
-        private String privateKey;
-        private String publicKey;
+        private PrivateKey privateKey;
+        private PublicKey publicKey;
 
         private Builder() {}
 
@@ -87,12 +89,12 @@ public class Person {
             return this;
         }
 
-        public Builder privateKey(String privateKey) {
+        public Builder privateKey(PrivateKey privateKey) {
             this.privateKey = privateKey;
             return this;
         }
 
-        public Builder publicKey(String publicKey) {
+        public Builder publicKey(PublicKey publicKey) {
             this.publicKey = publicKey;
             return this;
         }

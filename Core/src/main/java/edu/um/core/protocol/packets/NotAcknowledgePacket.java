@@ -7,6 +7,8 @@ import java.util.HashSet;
 public class NotAcknowledgePacket extends Packet {
 
     public NotAcknowledgePacket() {
-        super(Packets.NAK, new HashSet<>());
+        super(Packets.NAK, new HashSet<>() {{
+            this.add("message");
+        }});
     }
 }

@@ -3,6 +3,9 @@ package edu.um.core.protocol;
 import edu.um.core.Person;
 import edu.um.core.protocol.packets.*;
 
+import java.security.PublicKey;
+import java.util.Base64;
+
 public class PacketFactory {
 
     private PacketFactory() {}
@@ -11,13 +14,15 @@ public class PacketFactory {
         return (AcknowledgePacket) Packets.ACK.create();
     }
 
-    public static NotAcknowledgePacket createNotAcknowledgePacket() {
-        return (NotAcknowledgePacket) Packets.NAK.create();
+    public static NotAcknowledgePacket createNotAcknowledgePacket(String message) {
+        NotAcknowledgePacket packet = Packets.NAK.create().as(NotAcknowledgePacket.class);
+        packet.add("message", message);
+        return packet;
     }
 
-    public static GreetClientPacket createGreetClientPacket(String publicKey) {
+    public static GreetClientPacket createGreetClientPacket(PublicKey publicKey) {
         GreetClientPacket packet =  Packets.GREET_CLIENT.create().as(GreetClientPacket.class);
-        packet.add("publicKey", publicKey);
+        packet.add("publicKey", Base64.getEncoder().encodeToString(publicKey.getEncoded()));
         return packet;
     }
 
@@ -26,7 +31,7 @@ public class PacketFactory {
         packet.add("id", person.getId());
         packet.add("firstNames", String.join(" ", person.getFirstNames()));
         packet.add("lastName", person.getLastName());
-        packet.add("publicKey", person.getPublicKey());
+        packet.add("publicKey", Base64.getEncoder().encodeToString(person.getPublicKey().getEncoded()));
         return packet;
     }
 
@@ -34,12 +39,6 @@ public class PacketFactory {
         SendMessagePacket packet = Packets.SEND_MESSAGE.create().as(SendMessagePacket.class);
         packet.add("receiver", receiver);
         packet.add("message", message);
-        return packet;
-    }
-
-    public static ExecutedActionPacket createExecuteActionPacket(boolean success) {
-        ExecutedActionPacket packet = Packets.EXECUTED_ACTION.create().as(ExecutedActionPacket.class);
-        packet.add("success", String.valueOf(success));
         return packet;
     }
 

@@ -16,8 +16,6 @@ public enum Packets {
 
     SEND_MESSAGE(4, SendMessagePacket.class),
 
-    EXECUTED_ACTION(5, ExecutedActionPacket.class),
-
     REQUEST_PUBLIC_KEY(6, RequestPublicKeyPacket.class),
 
     SEND_PERSON(7, SendPersonPacket.class),
