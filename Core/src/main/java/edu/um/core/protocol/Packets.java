@@ -3,6 +3,7 @@ package edu.um.core.protocol;
 import edu.um.core.protocol.packets.*;
 
 import java.lang.reflect.InvocationTargetException;
+import java.security.PublicKey;
 import java.util.Optional;
 
 public enum Packets {
@@ -38,6 +39,10 @@ public enum Packets {
         return id;
     }
 
+    public Class<? extends Packet> getClazz() {
+        return packet;
+    }
+
     public Packet create() {
         try {
             return packet.getDeclaredConstructor().newInstance();
@@ -48,10 +53,26 @@ public enum Packets {
         throw new IllegalStateException("Failed to create packet");
     }
 
+    public EncryptedPacket createEncryptedPacket(PublicKey publicKey) {
+        try {
+            return (EncryptedPacket) packet.getDeclaredConstructor(PublicKey.class).newInstance(publicKey);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            e.printStackTrace();
+            System.exit(1); // unrecoverable
+        }
+        throw new IllegalStateException("Failed to create encrypted packet");
+    }
+
     public static Optional<Packet> create(int packetId) {
         Optional<Packets> optional = byId(packetId);
         if(optional.isPresent()) {
-            return Optional.of(optional.get().create());
+            Packets packet = optional.get();
+
+            if(EncryptedPacket.class.isAssignableFrom(packet.getClazz())) {
+                return Optional.of(packet.createEncryptedPacket(null)); //TODO
+            }
+
+            return Optional.of(packet.create());
         }
         return Optional.empty();
     }

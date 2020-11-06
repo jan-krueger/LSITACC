@@ -7,6 +7,7 @@ import java.util.*;
 public class PersonRegister {
 
     private final Map<String, Entry> persons_by_id = new HashMap<>();
+    private final Map<String, Entry> persons_by_channel_id = new HashMap<>();
     private final Map<String, List<Entry>> persons_by_name = new HashMap<>();
 
     public PersonRegister() {}
@@ -24,6 +25,12 @@ public class PersonRegister {
 
         final Entry entry = new Entry(person, channel);
         persons_by_id.put(person.getId(), entry);
+
+        // Note: To identify the user by channel id is only used by the server because only the server has direct channels
+        // to all clients therefore no client can store any associated channel id.
+        if(channel != null) {
+            persons_by_channel_id.put(channel.id().asLongText(), entry);
+        }
 
         //--- the name does not need to be unique, so we need to store a list for people with the same name
         if(persons_by_name.containsKey(person.getFullNameIdentifier())) {
@@ -57,6 +64,10 @@ public class PersonRegister {
         }
 
         return persons;
+    }
+
+    public Optional<Entry> byChannel(Channel channel) {
+        return Optional.ofNullable(persons_by_channel_id.get(channel.id().asLongText()));
     }
 
     public static class Entry {

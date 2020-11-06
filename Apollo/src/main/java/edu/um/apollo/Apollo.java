@@ -6,11 +6,9 @@ import com.google.gson.JsonObject;
 import edu.um.apollo.action.ActionParser;
 import edu.um.apollo.action.ActionQueue;
 import edu.um.apollo.action.actions.SendPacketAction;
-import edu.um.core.PacketDecoder;
-import edu.um.core.Person;
-import edu.um.core.PersonRegister;
-import edu.um.core.RSA;
+import edu.um.core.*;
 import edu.um.core.protocol.PacketFactory;
+import edu.um.core.security.RSA;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -24,6 +22,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.PublicKey;
 import java.util.logging.Logger;
 
 public class Apollo {
@@ -80,7 +79,7 @@ public class Apollo {
     }
 
     //--- configuration
-    public String serverPublicKey = null;
+    public PublicKey serverPublicKey = null;
     private Person person;
     private ActionQueue actionQueue;
 
@@ -118,7 +117,7 @@ public class Apollo {
                 ChannelFuture f = b.connect().sync();
             this.channel = (SocketChannel) f.channel();
 
-            Thread.sleep(5000);
+            Thread.sleep(2500);
             advanceActionQueue();
 
             f.channel().closeFuture().sync();
@@ -141,11 +140,11 @@ public class Apollo {
         return this.actionQueue;
     }
 
-    public String getServerPublicKey() {
+    public PublicKey getServerPublicKey() {
         return serverPublicKey;
     }
 
-    public void setServerPublicKey(String serverPublicKey) {
+    public void setServerPublicKey(PublicKey serverPublicKey) {
         this.serverPublicKey = serverPublicKey;
     }
 

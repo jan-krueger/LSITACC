@@ -1,10 +1,11 @@
 package edu.um.core.protocol.packets;
 
+import com.google.gson.JsonObject;
 import edu.um.core.protocol.Packets;
 
 import java.util.HashSet;
 
-class AuthenticatedPacket extends Packet {
+public class AuthenticatedPacket extends Packet {
 
     private final String authToken;
 
@@ -13,8 +14,16 @@ class AuthenticatedPacket extends Packet {
         this.authToken = authToken;
     }
 
+
     public String getAuthToken() {
         return this.authToken;
+    }
+
+    @Override
+    protected JsonObject buildObject() {
+        JsonObject object = super.buildObject();
+        object.addProperty("authToken", this.authToken);
+        return object;
     }
 
 }

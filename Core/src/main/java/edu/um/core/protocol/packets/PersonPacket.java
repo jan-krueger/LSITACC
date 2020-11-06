@@ -1,7 +1,7 @@
 package edu.um.core.protocol.packets;
 
 import edu.um.core.Person;
-import edu.um.core.RSA;
+import edu.um.core.security.RSA;
 import edu.um.core.protocol.Packets;
 
 import java.util.Arrays;

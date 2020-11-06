@@ -4,9 +4,7 @@ import edu.um.core.Person;
 import edu.um.core.PersonRegister;
 import edu.um.core.protocol.PacketFactory;
 import edu.um.core.protocol.Packets;
-import edu.um.core.protocol.packets.GreetServerPacket;
-import edu.um.core.protocol.packets.Packet;
-import edu.um.core.protocol.packets.SendMessagePacket;
+import edu.um.core.protocol.packets.*;
 import edu.um.maspalomas.Maspalomas;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -25,6 +23,9 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object obj) throws InterruptedException {
 
         Packet packet = (Packet) obj;
+
+        //Optional<PersonRegister.Entry> authenticatedPerson = maspalomas.getPersonRegister().byChannel(ctx.channel());;
+
         switch (Packets.byId(packet.getId()).get()) {
             case GREET_SERVER:
                 Person person = packet.as(GreetServerPacket.class).getPerson();
@@ -38,7 +39,9 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
                 }
 
                 if (maspalomas.getPersonRegister().add(person, ctx.channel())) {
-                    ctx.writeAndFlush(PacketFactory.createGreetClientPacket(maspalomas.getServerPublicKey()).build()).sync();
+                    ctx.writeAndFlush(
+                            PacketFactory.createGreetClientPacket(maspalomas.getServerPublicKey(), person.getPublicKey()).build()
+                    ).sync();
                     ctx.writeAndFlush(PacketFactory.createAcknowledgePacket().build()).sync();
                 } else {
                     throw new IllegalStateException();
@@ -56,8 +59,11 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
 
 
                 for (PersonRegister.Entry receiver : receivers) {
-                    receiver.getChannel().writeAndFlush(PacketFactory.createSendMessagePacket(receiver.getPerson(), receiver.getPerson().getId(), messagePacket.get("message")).build())
-                    .sync();
+                    receiver.getChannel().writeAndFlush(
+                            PacketFactory.createSendMessagePacket(receiver.getPerson(), messagePacket.get("message"),
+                                    messagePacket.get("ivParameterSpec"), messagePacket.get("messageKey"),
+                                    receiver.getPerson().getPublicKey()).build()
+                    ).sync();
                     System.out.printf("message for %s: %s\n", receiver.getPerson().getId(), messagePacket.get("message"));
                 }
                 ctx.writeAndFlush(PacketFactory.createAcknowledgePacket().build()).sync();

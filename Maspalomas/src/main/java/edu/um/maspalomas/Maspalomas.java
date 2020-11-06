@@ -2,7 +2,7 @@ package edu.um.maspalomas;
 
 import edu.um.core.PacketDecoder;
 import edu.um.core.PersonRegister;
-import edu.um.core.RSA;
+import edu.um.core.security.RSA;
 import edu.um.maspalomas.filters.ProtocolFilter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -12,6 +12,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
@@ -38,6 +40,8 @@ public class Maspalomas {
     private PublicKey publicKey;
 
     private final PersonRegister personRegister = new PersonRegister();
+
+    private final EventExecutorGroup eventExecutors = new DefaultEventExecutorGroup(4);
 
     public Maspalomas(String host, int port) {
         this.host = host;

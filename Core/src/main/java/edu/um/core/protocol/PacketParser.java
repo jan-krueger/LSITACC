@@ -5,7 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import edu.um.core.Core;
-import edu.um.core.RSA;
+import edu.um.core.security.RSA;
 import edu.um.core.protocol.packets.Packet;
 
 import java.security.PrivateKey;
@@ -23,12 +23,20 @@ public class PacketParser {
         try {
             object = gson.fromJson(data, JsonObject.class);
         } catch (JsonSyntaxException exception) {
-            String decryptedData = RSA.decrypt(data, privateKey);
-            if(decryptedData == null) {
-                Core.LOGGER.warning("Invalid packet could not be decrypted.");
-                return null;
+
+            StringBuilder decryptedData = new StringBuilder();
+
+            String[] chunks = data.split("_\\|_\\|_");
+            for(String chunk : chunks) {
+                String decrypted = RSA.decrypt(chunk, privateKey);
+                if(decrypted == null) {
+                    Core.LOGGER.warning("Invalid packet could not be decrypted.");
+                    return Optional.empty();
+                }
+                decryptedData.append(decrypted);
             }
-            object = gson.fromJson(data, JsonObject.class);
+
+            object = gson.fromJson(decryptedData.toString(), JsonObject.class);
         }
 
         if(object.has("id")) {
