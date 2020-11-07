@@ -1,4 +1,4 @@
-package edu.um.core.protocol.packets;
+package edu.um.core.protocol.types;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -15,6 +15,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+/**
+ * This type of packets offers the ability to encrypt certain fields. This is done by using a symmetric AES encryption
+ * to encrypt the fields. The AES key itself is then encrypted using the receiver's RSA public key, and all of that is
+ * transmitted.
+ */
 public class EncryptedPacket extends AuthenticatedPacket {
 
     private final PublicKey publicKey;

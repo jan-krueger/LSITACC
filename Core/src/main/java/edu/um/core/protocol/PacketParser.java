@@ -5,10 +5,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import edu.um.core.Core;
-import edu.um.core.protocol.packets.EncryptedPacket;
 import edu.um.core.protocol.packets.ProxyPacket;
+import edu.um.core.protocol.types.EncryptedPacket;
+import edu.um.core.protocol.types.ProxiedPacket;
 import edu.um.core.security.RSA;
-import edu.um.core.protocol.packets.Packet;
+import edu.um.core.protocol.types.Packet;
 import edu.um.core.security.SymmetricEncryption;
 
 import javax.crypto.spec.IvParameterSpec;
@@ -21,9 +22,14 @@ public class PacketParser {
 
     private final static Gson gson = new Gson();
 
-    private PacketParser() {}
+    public PacketParser() {}
 
-    public static Optional<Packet> parse(String data, PrivateKey privateKey, boolean isClient) {
+    /**
+     * @param data
+     * @param privateKey
+     * @return
+     */
+    private static Result parse(String data, PrivateKey privateKey) {
         JsonObject object;
 
         try {
@@ -37,7 +43,7 @@ public class PacketParser {
                 String decrypted = RSA.decrypt(chunk, privateKey);
                 if(decrypted == null) {
                     Core.LOGGER.warning("Invalid packet could not be decrypted.");
-                    return Optional.empty();
+                    return null;
                 }
                 decryptedData.append(decrypted);
             }
@@ -60,39 +66,88 @@ public class PacketParser {
                     });
                 }
 
-                if(object.has("encryptedPayload")) {
-
-                    JsonObject encryptedPayload = object.getAsJsonObject("encryptedPayload");
-                    JsonArray encryptedArray = encryptedPayload.getAsJsonArray("data");
-
-                    final String encryptedKey = encryptedPayload.get("key").getAsString();
-                    final String encryptedIvParameterSpec = encryptedPayload.get("ivParameterSpec").getAsString();
-
-                    if(isClient) {
-                        //--- recover key
-                        SecretKeySpec secretKeySpec = new SecretKeySpec(Base64.getDecoder().decode(RSA.decrypt(encryptedKey, privateKey)), "AES");
-                        IvParameterSpec ivParameterSpec = new IvParameterSpec(Base64.getDecoder().decode(RSA.decrypt(encryptedIvParameterSpec, privateKey)));
-
-                        encryptedArray.forEach(e -> {
-                            JsonObject entry = (JsonObject) e;
-                            final String key = entry.get("key").getAsString();
-                            final String value = SymmetricEncryption.decrypt(secretKeySpec, ivParameterSpec,
-                                    entry.get("value").getAsString());
-                            ((EncryptedPacket)packet.get()).addRawToEncrypted(key, value);
-                        });
-                    } else {
-                        return Optional.of(new ProxyPacket(packet.get().getType(), object));
-                    }
-
-                }
+                return new Result(data, object, packet.get());
 
             }
 
-            return packet;
 
         }
 
-        return Optional.empty();
+        return null;
+    }
+
+
+    public static class Server {
+
+        public static Optional<Packet> parse(String data, PrivateKey privateKey) {
+            Result result = PacketParser.parse(data, privateKey);
+
+            if(result == null) {
+                return Optional.empty();
+            }
+
+            Packet packet = result.packet;
+            JsonObject object = result.object;
+
+            if(packet instanceof ProxiedPacket) {
+                return Optional.of(new ProxyPacket(packet.getType(), (ProxiedPacket) packet, object));
+            }
+
+            return Optional.of(packet);
+
+        }
+
+    }
+
+    public static class Client {
+
+        public static Optional<Packet> parse(String data, PrivateKey privateKey) {
+            Result result = PacketParser.parse(data, privateKey);
+
+            if (result == null) {
+                return Optional.empty();
+            }
+
+            JsonObject object = result.object;
+            Packet packet = result.packet;
+            if(object.has("encryptedPayload")) {
+                //--- recover key
+                JsonObject encryptedPayload = object.getAsJsonObject("encryptedPayload");
+                JsonArray encryptedArray = encryptedPayload.getAsJsonArray("data");
+
+                final String encryptedKey = encryptedPayload.get("key").getAsString();
+                final String encryptedIvParameterSpec = encryptedPayload.get("ivParameterSpec").getAsString();
+
+                SecretKeySpec secretKeySpec = new SecretKeySpec(Base64.getDecoder().decode(RSA.decrypt(encryptedKey, privateKey)), "AES");
+                IvParameterSpec ivParameterSpec = new IvParameterSpec(Base64.getDecoder().decode(RSA.decrypt(encryptedIvParameterSpec, privateKey)));
+
+                encryptedArray.forEach(e -> {
+                    JsonObject entry = (JsonObject) e;
+                    final String key = entry.get("key").getAsString();
+                    final String value = SymmetricEncryption.decrypt(secretKeySpec, ivParameterSpec,
+                            entry.get("value").getAsString());
+                    ((EncryptedPacket)packet).addRawToEncrypted(key, value);
+                });
+
+            }
+
+            return Optional.of(packet);
+        }
+
+    }
+
+    private static class Result {
+
+        public String rawData;
+        public JsonObject object;
+        public Packet packet;
+
+        public Result(String rawData, JsonObject object, Packet packet) {
+            this.rawData = rawData;
+            this.object = object;
+            this.packet = packet;
+        }
+
     }
 
 }

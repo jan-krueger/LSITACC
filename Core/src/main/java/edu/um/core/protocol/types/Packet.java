@@ -1,4 +1,4 @@
-package edu.um.core.protocol.packets;
+package edu.um.core.protocol.types;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -12,6 +12,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * A class that represents the most basic package. It can represent a specified payload but NOTHING is encrypted or
+ * protected in any way if it is send.
+ */
 public class Packet {
 
     public static final String PACKET_SEPARATOR = "\n";
@@ -40,10 +44,6 @@ public class Packet {
 
     public Packets getType() {
         return packets;
-    }
-
-    public Set<String> getRequiredData() {
-        return requiredData;
     }
 
     public String get(String key) {

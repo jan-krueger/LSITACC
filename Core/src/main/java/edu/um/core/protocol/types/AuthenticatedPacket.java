@@ -1,4 +1,4 @@
-package edu.um.core.protocol.packets;
+package edu.um.core.protocol.types;
 
 import com.google.gson.JsonObject;
 import edu.um.core.protocol.Packets;

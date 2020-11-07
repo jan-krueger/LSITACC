@@ -16,6 +16,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
@@ -110,6 +111,7 @@ public class Apollo {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel sc)  {
+                        sc.pipeline().addLast(new LineBasedFrameDecoder(8192, true, true));
                         sc.pipeline().addLast(new PacketDecoder(person.getPrivateKey(), true));
                         sc.pipeline().addLast(new ClientFilter(Apollo.this));
                     }

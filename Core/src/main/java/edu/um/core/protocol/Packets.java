@@ -1,6 +1,8 @@
 package edu.um.core.protocol;
 
 import edu.um.core.protocol.packets.*;
+import edu.um.core.protocol.types.EncryptedPacket;
+import edu.um.core.protocol.types.Packet;
 
 import java.lang.reflect.InvocationTargetException;
 import java.security.PublicKey;
@@ -10,29 +12,27 @@ public enum Packets {
 
     //--- This packet is send as a response to a received package from the client to ensure that the action
     // has been successfully executed.
-    ACK(1, AcknowledgePacket.class, false),
+    ACK(1, AcknowledgePacket.class),
 
-    GREET_SERVER(2, GreetServerPacket.class, false),
-    GREET_CLIENT(3, GreetClientPacket.class, false),
+    GREET_SERVER(2, GreetServerPacket.class),
+    GREET_CLIENT(3, GreetClientPacket.class),
 
-    SEND_MESSAGE(4, SendMessagePacket.class, true),
+    SEND_MESSAGE(4, SendMessagePacket.class),
 
-    REQUEST_PUBLIC_KEY(6, RequestPublicKeyPacket.class, false),
+    REQUEST_PUBLIC_KEY(6, RequestPublicKeyPacket.class),
 
-    SEND_PERSON(7, SendPersonPacket.class, false),
+    SEND_PERSON(7, SendPersonPacket.class),
 
     //--- This message is send as a response to a received package from the client to in case the action has not (!) been
     // executed.
-    NAK(-1, NotAcknowledgePacket.class, false);
+    NAK(-1, NotAcknowledgePacket.class);
 
     private final int id;
     private final Class<? extends Packet> packet;
-    private final boolean proxy;
 
-    Packets(int id, Class<? extends Packet> packet, boolean proxy) {
+    Packets(int id, Class<? extends Packet> packet) {
         this.id = id;
         this.packet = packet;
-        this.proxy = proxy;
     }
 
     public int getId() {
@@ -41,10 +41,6 @@ public enum Packets {
 
     public Class<? extends Packet> getClazz() {
         return packet;
-    }
-
-    public boolean isProxy() {
-        return proxy;
     }
 
     public Packet create() {

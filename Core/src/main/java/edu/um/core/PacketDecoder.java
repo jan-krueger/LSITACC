@@ -1,50 +1,41 @@
 package edu.um.core;
 
 import edu.um.core.protocol.PacketParser;
-import edu.um.core.protocol.packets.Packet;
+import edu.um.core.protocol.types.Packet;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.codec.MessageToMessageDecoder;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.security.PrivateKey;
+import java.util.List;
 import java.util.Optional;
 
-public class PacketDecoder extends LineBasedFrameDecoder {
+public class PacketDecoder extends MessageToMessageDecoder<ByteBuf> { // extends LineBasedFrameDecoder {
 
     private final PrivateKey localPrivateKey;
     private final StringBuilder fullPacket = new StringBuilder();
     private final boolean isClient;
 
     public PacketDecoder(PrivateKey localPrivateKey, boolean isClient) {
-        super(8192, true, true);
         this.localPrivateKey = localPrivateKey;
         this.isClient = isClient;
     }
 
     @Override
-    protected Packet decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
-
-        final String data = buffer.toString(StandardCharsets.UTF_8);
-        if(!hasEndOfPacket(data)) {
-            fullPacket.append(data);
-            return null;
-        } else {
-            fullPacket.append(data);
-        }
-
-        ByteBuf byteBuf = (ByteBuf) super.decode(ctx, buffer);
+    protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf buf, List<Object> list) throws Exception {
 
         try {
 
-            final String message = byteBuf.toString(StandardCharsets.UTF_8);
+            final String message = buf.toString(Charset.defaultCharset());
             Core.LOGGER.info(message);
 
-            final Optional<Packet> packetOptional = PacketParser.parse(message, localPrivateKey, isClient);
+            final Optional<Packet> packetOptional = isClient ? PacketParser.Client.parse(message, localPrivateKey) :
+                    PacketParser.Server.parse(message, localPrivateKey);
 
             if (packetOptional.isPresent()) {
                 final Packet packet = packetOptional.get();
-                return packet;
+                list.add(packet);
             }
         } catch (NullPointerException ex) {
             ex.printStackTrace();
@@ -52,11 +43,6 @@ public class PacketDecoder extends LineBasedFrameDecoder {
         }
 
 
-        return null;
-    }
 
-    private boolean hasEndOfPacket(String buffer) {
-        return buffer.endsWith(Packet.PACKET_SEPARATOR);
     }
-
 }

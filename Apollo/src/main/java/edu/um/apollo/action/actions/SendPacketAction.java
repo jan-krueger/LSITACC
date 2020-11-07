@@ -2,7 +2,7 @@ package edu.um.apollo.action.actions;
 
 import edu.um.apollo.Apollo;
 import edu.um.apollo.action.Action;
-import edu.um.core.protocol.packets.Packet;
+import edu.um.core.protocol.types.Packet;
 import io.netty.channel.socket.SocketChannel;
 
 public class SendPacketAction extends Action {

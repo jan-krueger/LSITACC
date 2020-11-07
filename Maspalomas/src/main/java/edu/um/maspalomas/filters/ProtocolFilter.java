@@ -5,6 +5,8 @@ import edu.um.core.PersonRegister;
 import edu.um.core.protocol.PacketFactory;
 import edu.um.core.protocol.Packets;
 import edu.um.core.protocol.packets.*;
+import edu.um.core.protocol.types.Packet;
+import edu.um.core.protocol.packets.ProxyPacket;
 import edu.um.maspalomas.Maspalomas;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -51,7 +53,7 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
 
             case SEND_MESSAGE:
                 ProxyPacket proxyPacket = packet.as(ProxyPacket.class);
-                Optional<PersonRegister.Entry> receiverOptional = maspalomas.getPersonRegister().byId(proxyPacket.getReceiver());
+                Optional<PersonRegister.Entry> receiverOptional = maspalomas.getPersonRegister().byId(proxyPacket.getReceiverId());
 
                 if (receiverOptional.isEmpty()) {
                     ctx.writeAndFlush(PacketFactory.createNotAcknowledgePacket("Unknown receiver").build()).sync();

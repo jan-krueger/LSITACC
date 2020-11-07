@@ -1,8 +1,8 @@
 package edu.um.core.protocol.packets;
 
 import edu.um.core.protocol.Packets;
+import edu.um.core.protocol.types.Packet;
 
-import java.security.PublicKey;
 import java.util.HashSet;
 
 public class GreetClientPacket extends Packet {

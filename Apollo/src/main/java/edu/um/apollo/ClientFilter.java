@@ -1,7 +1,7 @@
 package edu.um.apollo;
 
 import edu.um.core.protocol.Packets;
-import edu.um.core.protocol.packets.Packet;
+import edu.um.core.protocol.types.Packet;
 import edu.um.core.protocol.packets.SendPersonPacket;
 import edu.um.core.security.RSA;
 import io.netty.channel.ChannelHandlerContext;

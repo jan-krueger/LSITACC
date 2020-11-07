@@ -12,6 +12,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import org.apache.commons.cli.*;
@@ -68,6 +69,7 @@ public class Maspalomas {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) {
+                            ch.pipeline().addLast(new LineBasedFrameDecoder(8192, true, true));
                             ch.pipeline().addLast(new PacketDecoder(privateKey, false));
                             ch.pipeline().addLast(new ProtocolFilter(Maspalomas.this));
                         }
