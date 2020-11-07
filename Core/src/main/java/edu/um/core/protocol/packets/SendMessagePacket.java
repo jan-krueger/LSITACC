@@ -11,8 +11,8 @@ public class SendMessagePacket extends EncryptedPacket {
         //TODO authToken
         super(Packets.SEND_MESSAGE, "authToken", publicKey, new HashSet<>() {{
             this.add("receiver");
-            this.add("messageKey");
-            this.add("ivParameterSpec");
+            this.add("message");
+        }}, new HashSet<>() {{
             this.add("message");
         }});
     }

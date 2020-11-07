@@ -10,6 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ProtocolFilter extends ChannelInboundHandlerAdapter {
 
@@ -40,7 +41,7 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
 
                 if (maspalomas.getPersonRegister().add(person, ctx.channel())) {
                     ctx.writeAndFlush(
-                            PacketFactory.createGreetClientPacket(maspalomas.getServerPublicKey(), person.getPublicKey()).build()
+                            PacketFactory.createGreetClientPacket(maspalomas.getServerPublicKey()).build()
                     ).sync();
                     ctx.writeAndFlush(PacketFactory.createAcknowledgePacket().build()).sync();
                 } else {
@@ -49,23 +50,17 @@ public class ProtocolFilter extends ChannelInboundHandlerAdapter {
                 break;
 
             case SEND_MESSAGE:
-                SendMessagePacket messagePacket = packet.as(SendMessagePacket.class);
-                List<PersonRegister.Entry> receivers = maspalomas.getPersonRegister().find(messagePacket.get("receiver"));
+                ProxyPacket proxyPacket = packet.as(ProxyPacket.class);
+                Optional<PersonRegister.Entry> receiverOptional = maspalomas.getPersonRegister().byId(proxyPacket.getReceiver());
 
-                if (receivers.isEmpty()) {
+                if (receiverOptional.isEmpty()) {
                     ctx.writeAndFlush(PacketFactory.createNotAcknowledgePacket("Unknown receiver").build()).sync();
                     return;
                 }
+                PersonRegister.Entry receiver = receiverOptional.get();
 
-
-                for (PersonRegister.Entry receiver : receivers) {
-                    receiver.getChannel().writeAndFlush(
-                            PacketFactory.createSendMessagePacket(receiver.getPerson(), messagePacket.get("message"),
-                                    messagePacket.get("ivParameterSpec"), messagePacket.get("messageKey"),
-                                    receiver.getPerson().getPublicKey()).build()
-                    ).sync();
-                    System.out.printf("message for %s: %s\n", receiver.getPerson().getId(), messagePacket.get("message"));
-                }
+                receiver.getChannel().writeAndFlush(proxyPacket.build()).sync();
+                System.out.printf("message for %s\n", receiver.getPerson().getId());
                 ctx.writeAndFlush(PacketFactory.createAcknowledgePacket().build()).sync();
                 break;
 

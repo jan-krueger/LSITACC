@@ -26,7 +26,7 @@ public class SendMessageAction extends Action {
         List<PersonRegister.Entry> receivers = apollo.getPersonRegister().find(getArg("receiver"));
         if(receivers.isEmpty()) {
             socketChannel.writeAndFlush(
-                    PacketFactory.createRequestPublicKeyPacket(getArg("receiver"), apollo.getServerPublicKey()).build()
+                    PacketFactory.createRequestPublicKeyPacket(getArg("receiver")).build()
             ).sync();
             return false;
         }
@@ -37,16 +37,11 @@ public class SendMessageAction extends Action {
     protected boolean execute(Apollo apollo, SocketChannel socketChannel) throws InterruptedException {
         List<PersonRegister.Entry> receivers = apollo.getPersonRegister().find(getArg("receiver"));
         for(PersonRegister.Entry receiver : receivers) {
-            IvParameterSpec ivParameterSpec = SymmetricEncryption.generateIvParameterSpec();
-            SecretKey secretKey = SymmetricEncryption.generateKey();
-
             socketChannel.writeAndFlush(
                 PacketFactory.createSendMessagePacket(
                         receiver.getPerson(),
-                        SymmetricEncryption.encrypt(secretKey, ivParameterSpec, getArg("message")),
-                        RSA.encrypt(Base64.getEncoder().encodeToString(ivParameterSpec.getIV()), receiver.getPerson().getPublicKey()),
-                        RSA.encrypt(Base64.getEncoder().encodeToString(secretKey.getEncoded()), receiver.getPerson().getPublicKey()),
-                        apollo.getServerPublicKey()
+                        getArg("message"),
+                        receiver.getPerson().getPublicKey()
                 ).build()
             );
         }

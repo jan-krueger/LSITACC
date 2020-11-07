@@ -10,29 +10,29 @@ public enum Packets {
 
     //--- This packet is send as a response to a received package from the client to ensure that the action
     // has been successfully executed.
-    ACK(1, AcknowledgePacket.class),
+    ACK(1, AcknowledgePacket.class, false),
 
-    GREET_SERVER(2, GreetServerPacket.class),
-    GREET_CLIENT(3, GreetClientPacket.class),
+    GREET_SERVER(2, GreetServerPacket.class, false),
+    GREET_CLIENT(3, GreetClientPacket.class, false),
 
-    SEND_MESSAGE(4, SendMessagePacket.class),
+    SEND_MESSAGE(4, SendMessagePacket.class, true),
 
-    REQUEST_PUBLIC_KEY(6, RequestPublicKeyPacket.class),
+    REQUEST_PUBLIC_KEY(6, RequestPublicKeyPacket.class, false),
 
-    SEND_PERSON(7, SendPersonPacket.class),
-
-
+    SEND_PERSON(7, SendPersonPacket.class, false),
 
     //--- This message is send as a response to a received package from the client to in case the action has not (!) been
     // executed.
-    NAK(-1, NotAcknowledgePacket.class);
+    NAK(-1, NotAcknowledgePacket.class, false);
 
     private final int id;
     private final Class<? extends Packet> packet;
+    private final boolean proxy;
 
-    Packets(int id, Class<? extends Packet> packet) {
+    Packets(int id, Class<? extends Packet> packet, boolean proxy) {
         this.id = id;
         this.packet = packet;
+        this.proxy = proxy;
     }
 
     public int getId() {
@@ -41,6 +41,10 @@ public enum Packets {
 
     public Class<? extends Packet> getClazz() {
         return packet;
+    }
+
+    public boolean isProxy() {
+        return proxy;
     }
 
     public Packet create() {

@@ -2,14 +2,12 @@ package edu.um.core.protocol.packets;
 
 import edu.um.core.protocol.Packets;
 
-import java.security.PublicKey;
 import java.util.HashSet;
 
-public class RequestPublicKeyPacket extends EncryptedPacket {
+public class RequestPublicKeyPacket extends Packet {
 
-    public RequestPublicKeyPacket(PublicKey publicKey) {
-        //TODO auth token
-        super(Packets.REQUEST_PUBLIC_KEY, "auth-token", publicKey, new HashSet<>() {{
+    public RequestPublicKeyPacket() {
+        super(Packets.REQUEST_PUBLIC_KEY, new HashSet<>() {{
             this.add("identifier");
         }});
     }

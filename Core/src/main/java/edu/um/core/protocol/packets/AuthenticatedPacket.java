@@ -14,7 +14,6 @@ public class AuthenticatedPacket extends Packet {
         this.authToken = authToken;
     }
 
-
     public String getAuthToken() {
         return this.authToken;
     }

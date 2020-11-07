@@ -68,7 +68,7 @@ public class Maspalomas {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) {
-                            ch.pipeline().addLast(new PacketDecoder(privateKey));
+                            ch.pipeline().addLast(new PacketDecoder(privateKey, false));
                             ch.pipeline().addLast(new ProtocolFilter(Maspalomas.this));
                         }
                     })

@@ -16,7 +16,7 @@ public class Packet {
 
     public static final String PACKET_SEPARATOR = "\n";
 
-    private final int id;
+    private final Packets packets;
     private final Set<String> requiredData;
     private Map<String, String> payload = new HashMap<>();
 
@@ -26,7 +26,7 @@ public class Packet {
      * @param requiredData The data keys required for this packet.
      */
     protected Packet(Packets id, HashSet<String> requiredData) {
-        this.id = id.getId();
+        this.packets = id;
         this.requiredData = requiredData;
     }
 
@@ -35,7 +35,11 @@ public class Packet {
     }
 
     public int getId() {
-        return id;
+        return packets.getId();
+    }
+
+    public Packets getType() {
+        return packets;
     }
 
     public Set<String> getRequiredData() {
@@ -51,7 +55,7 @@ public class Packet {
             this.payload.put(key, value);
         } else {
             throw new IllegalArgumentException(String.format("'%s' is not a valid option for %s (%d)",
-                    key, this.getClass().getName(), this.id));
+                    key, this.getClass().getName(), this.getId()));
         }
         return this;
     }
@@ -61,12 +65,8 @@ public class Packet {
     }
 
     protected JsonObject buildObject() {
-        if(this.requiredData.size() != this.payload.size()) {
-            throw new IllegalStateException("Data set is not complete");
-        }
-
         JsonObject payload = new JsonObject();
-        payload.addProperty("id", this.id);
+        payload.addProperty("id", this.getId());
         JsonArray dataArray = new JsonArray();
         this.payload.forEach((key, value) -> {
             JsonObject entryObject = new JsonObject();

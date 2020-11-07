@@ -110,7 +110,7 @@ public class Apollo {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel sc)  {
-                        sc.pipeline().addLast(new PacketDecoder(person.getPrivateKey()));
+                        sc.pipeline().addLast(new PacketDecoder(person.getPrivateKey(), true));
                         sc.pipeline().addLast(new ClientFilter(Apollo.this));
                     }
                 });

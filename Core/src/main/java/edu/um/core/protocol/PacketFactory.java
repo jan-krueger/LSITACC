@@ -2,11 +2,7 @@ package edu.um.core.protocol;
 
 import edu.um.core.Person;
 import edu.um.core.protocol.packets.*;
-import edu.um.core.security.RSA;
-import edu.um.core.security.SymmetricEncryption;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 import java.security.PublicKey;
 import java.util.Base64;
 
@@ -24,8 +20,8 @@ public class PacketFactory {
         return packet;
     }
 
-    public static GreetClientPacket createGreetClientPacket(PublicKey serverPublicKey, PublicKey clientKey) {
-        GreetClientPacket packet =  Packets.GREET_CLIENT.createEncryptedPacket(clientKey).as(GreetClientPacket.class);
+    public static GreetClientPacket createGreetClientPacket(PublicKey serverPublicKey) {
+        GreetClientPacket packet =  Packets.GREET_CLIENT.create().as(GreetClientPacket.class);
         packet.add("publicKey", Base64.getEncoder().encodeToString(serverPublicKey.getEncoded()));
         return packet;
     }
@@ -39,19 +35,15 @@ public class PacketFactory {
         return packet;
     }
 
-    public static SendMessagePacket createSendMessagePacket(Person receiver, String message, String ivParameterSpec, String messageKey,
-                                                            PublicKey clientKey) {
+    public static SendMessagePacket createSendMessagePacket(Person receiver, String message, PublicKey clientKey) {
         SendMessagePacket packet = Packets.SEND_MESSAGE.createEncryptedPacket(clientKey).as(SendMessagePacket.class);
         packet.add("receiver", receiver.getId());
         packet.add("message", message);
-        packet.add("ivParameterSpec", ivParameterSpec);
-        packet.add("messageKey", messageKey);
-
         return packet;
     }
 
-    public static RequestPublicKeyPacket createRequestPublicKeyPacket(String identifier, PublicKey clientKey) {
-        RequestPublicKeyPacket packet = Packets.REQUEST_PUBLIC_KEY.createEncryptedPacket(clientKey)
+    public static RequestPublicKeyPacket createRequestPublicKeyPacket(String identifier) {
+        RequestPublicKeyPacket packet = Packets.REQUEST_PUBLIC_KEY.create()
                 .as(RequestPublicKeyPacket.class);
         packet.add("identifier", identifier);
         return packet;

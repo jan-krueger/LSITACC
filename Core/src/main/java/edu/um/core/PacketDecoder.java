@@ -14,10 +14,12 @@ public class PacketDecoder extends LineBasedFrameDecoder {
 
     private final PrivateKey localPrivateKey;
     private final StringBuilder fullPacket = new StringBuilder();
+    private final boolean isClient;
 
-    public PacketDecoder(PrivateKey localPrivateKey) {
+    public PacketDecoder(PrivateKey localPrivateKey, boolean isClient) {
         super(8192, true, true);
         this.localPrivateKey = localPrivateKey;
+        this.isClient = isClient;
     }
 
     @Override
@@ -38,14 +40,14 @@ public class PacketDecoder extends LineBasedFrameDecoder {
             final String message = byteBuf.toString(StandardCharsets.UTF_8);
             Core.LOGGER.info(message);
 
-            final Optional<Packet> packetOptional = PacketParser.parse(message, localPrivateKey);
-
+            final Optional<Packet> packetOptional = PacketParser.parse(message, localPrivateKey, isClient);
 
             if (packetOptional.isPresent()) {
                 final Packet packet = packetOptional.get();
                 return packet;
             }
         } catch (NullPointerException ex) {
+            ex.printStackTrace();
             System.out.println(ex);
         }
 
