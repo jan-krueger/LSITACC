@@ -17,12 +17,9 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.logging.Logger;
 
-/**
- * Central organisation
- */
-public class Maspalomas implements Runnable {
+public class Child implements Runnable {
 
-    public static final Logger LOGGER = Logger.getLogger(Maspalomas.class.getSimpleName());
+    public static final Logger LOGGER = Logger.getLogger(Child.class.getSimpleName());
 
     private final String host;
     private final int port;
@@ -31,7 +28,7 @@ public class Maspalomas implements Runnable {
 
     private final PersonRegister personRegister = new PersonRegister();
 
-    public Maspalomas(String host, int port) {
+    public Child(String host, int port) {
         this.host = host;
         this.port = port;
         try {

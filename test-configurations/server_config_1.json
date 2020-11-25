@@ -1,0 +1,43 @@
+{
+    "server": {
+        "port": 50123
+    },
+    "organizations": [
+        {
+            "name": "Google",
+            "roles": [
+                "CEO",
+                "Dev"
+            ],
+            "employees": [
+                {
+                    "id": "5856e6cd-0da6-4573-9a04-cbb11f5e68d3",
+                    "roles": [
+                        "CEO"
+                    ]
+                },
+                {
+                    "id": "6398C613619E4DCA88220ACA49603D87",
+                    "roles": [
+                        "Dev"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Alphabet",
+            "roles": [
+                "CEO",
+                "CFO"
+            ],
+            "employees": [
+                {
+                    "id": "72323121312__3619E4DCA88220ACA49603D87",
+                    "roles": [
+                        "CFO"
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -18,7 +18,7 @@ public class Person {
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
 
-    private Person(String id, String fullNameIdentifier, String lastName, String[] firstNames, PrivateKey privateKey, PublicKey publicKey) {
+    public Person(String id, String fullNameIdentifier, String lastName, String[] firstNames, PrivateKey privateKey, PublicKey publicKey) {
         this.id = id;
         this.fullNameIdentifier = fullNameIdentifier;
         this.lastName = lastName;

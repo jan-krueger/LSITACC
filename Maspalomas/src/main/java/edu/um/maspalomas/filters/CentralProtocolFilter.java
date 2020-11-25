@@ -14,11 +14,11 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import java.util.List;
 import java.util.Optional;
 
-public class ProtocolFilter extends ChannelInboundHandlerAdapter {
+public class CentralProtocolFilter extends ChannelInboundHandlerAdapter {
 
     private final Maspalomas maspalomas;
 
-    public ProtocolFilter(Maspalomas maspalomas) {
+    public CentralProtocolFilter(Maspalomas maspalomas) {
         this.maspalomas = maspalomas;
     }
 
